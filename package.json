@@ -2,16 +2,24 @@
   "name": "simulation-frame",
   "version": "0.1.0",
   "description": "A React-based simulation framework",
-  "main": "src/index.js",
-  "module": "src/index.js",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
   "files": [
-    "dist"
+    "dist",
+    "src"
   ],
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "prepublishOnly": "npm run build",
     "lint": "eslint .",
     "preview": "vite preview"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    }
   },
   "keywords": [
     "simulation",
