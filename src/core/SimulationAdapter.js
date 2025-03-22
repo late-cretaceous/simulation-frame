@@ -4,6 +4,37 @@
  */
 export class SimulationAdapter {
   /**
+   * Get the primary metric key used by this simulation
+   * Override this in custom simulations to change the primary display metric
+   * @returns {string} - The key of the primary metric (default: 'generation')
+   */
+  getPrimaryMetric() {
+    return 'generation';
+  }
+
+  /**
+   * Get the label for the primary metric
+   * Override this in custom simulations to customize the primary metric label
+   * @returns {string} - The display label for the primary metric
+   */
+  getPrimaryMetricLabel() {
+    const metric = this.getPrimaryMetric();
+    // Convert camelCase to Title Case (e.g., 'timeElapsed' to 'Time Elapsed')
+    return metric
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/^./, str => str.toUpperCase());
+  }
+
+  /**
+   * Get a formatter function for the primary metric
+   * Override this in custom simulations to customize the primary metric formatting
+   * @returns {Function|null} - A function that takes the metric value and returns formatted string
+   */
+  getPrimaryMetricFormatter() {
+    return null; // Default to standard formatting in SimulationStats
+  }
+
+  /**
    * Initialize the simulation
    * @param {CanvasRenderingContext2D} canvasContext - Canvas rendering context
    * @param {number} width - Canvas width
@@ -56,14 +87,6 @@ export class SimulationAdapter {
    * @returns {Object} - Parameters object with key-value pairs
    */
   getParameters() {
-    return {};
-  }
-  
-  /**
-   * Get metadata for configurable parameters
-   * @returns {Object} - Parameter metadata object
-   */
-  getParameterMetadata() {
     return {};
   }
 

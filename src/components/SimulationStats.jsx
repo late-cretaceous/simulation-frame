@@ -2,6 +2,7 @@ import React from 'react';
 
 /**
  * Displays simulation statistics and control buttons with enhanced UI
+ * that works for both discrete (generational) and continuous simulations
  */
 const SimulationStats = ({ 
   generation, 
@@ -12,7 +13,10 @@ const SimulationStats = ({
   showRestartConfirmation,
   onConfirmRestart,
   onCancelRestart,
-  lastAutosaveTime
+  lastAutosaveTime,
+  primaryMetric = 'generation',
+  primaryMetricLabel = 'Generation',
+  primaryMetricFormatter = null
 }) => {
   // Format the last autosave time
   const formatLastSaveTime = () => {
@@ -36,15 +40,49 @@ const SimulationStats = ({
     return lastAutosaveTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  // Filter out generation from stats as it's displayed separately
-  const filteredStats = stats ? Object.entries(stats).filter(([key]) => key !== 'generation') : [];
+  // Get the primary metric value from either explicit prop or stats object
+  const getPrimaryMetricValue = () => {
+    // If the primary metric is 'generation' and we have a direct prop for it
+    if (primaryMetric === 'generation' && generation !== undefined) {
+      return generation;
+    }
+    
+    // Otherwise look in stats object
+    if (stats && stats[primaryMetric] !== undefined) {
+      return stats[primaryMetric];
+    }
+    
+    // Fall back to 0 or N/A if metric not found
+    return typeof generation === 'number' ? 0 : 'N/A';
+  };
+  
+  // Format the primary metric value using custom formatter if provided
+  const formatPrimaryMetricValue = (value) => {
+    if (primaryMetricFormatter) {
+      return primaryMetricFormatter(value);
+    }
+    
+    if (typeof value === 'number') {
+      return Number.isInteger(value) ? value : value.toFixed(1);
+    }
+    
+    return value;
+  };
+
+  // Filter out the primary metric from stats as it's displayed separately
+  const filteredStats = stats ? 
+    Object.entries(stats).filter(([key]) => key !== primaryMetric) : 
+    [];
+  
+  // Get the primary metric value
+  const primaryMetricValue = getPrimaryMetricValue();
   
   return (
     <div className="stats-container">
       <div className="stats-primary">
         <div className="generation-display">
-          <span className="generation-label">Generation</span>
-          <span className="generation-value">{generation}</span>
+          <span className="generation-label">{primaryMetricLabel}</span>
+          <span className="generation-value">{formatPrimaryMetricValue(primaryMetricValue)}</span>
         </div>
         
         <div className="buttons-container">
