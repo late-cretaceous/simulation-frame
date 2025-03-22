@@ -1,7 +1,8 @@
 import React, { useRef, useEffect } from 'react';
+import { DEFAULT_MINIMAP_SIZE } from '../utils/constants';
 
 /**
- * A simplified minimap overlay that shows entity positions as minimal dots
+ * A performance-optimized minimap overlay that shows entity positions
  */
 const MinimapOverlay = ({ 
   canvasRef, 
@@ -10,7 +11,8 @@ const MinimapOverlay = ({
   organismPositions = [], 
   foodPositions = [],
   worldWidth = 1600,
-  worldHeight = 1000 
+  worldHeight = 1000,
+  minimapSize = DEFAULT_MINIMAP_SIZE
 }) => {
   const minimapRef = useRef(null);
   
@@ -19,17 +21,16 @@ const MinimapOverlay = ({
     
     const minimap = minimapRef.current;
     const ctx = minimap.getContext('2d');
-    const mapSize = minimap.width;
     
     // Clear previous frame
-    ctx.clearRect(0, 0, mapSize, mapSize);
+    ctx.clearRect(0, 0, minimapSize, minimapSize);
     
     // Draw background
     ctx.fillStyle = 'rgba(0, 0, 20, 0.7)';
-    ctx.fillRect(0, 0, mapSize, mapSize);
+    ctx.fillRect(0, 0, minimapSize, minimapSize);
     
     // Calculate map scale
-    const mapScale = mapSize / Math.max(worldWidth, worldHeight);
+    const mapScale = minimapSize / Math.max(worldWidth, worldHeight);
     
     // Draw simulation area boundary
     ctx.strokeStyle = 'rgba(100, 100, 255, 0.5)';
@@ -54,46 +55,46 @@ const MinimapOverlay = ({
     }
     
     // Limit the number of dots to draw for performance
-    const maxDots = 300;
+    const maxDots = 150; // Reduced for better performance
     
-    // Draw organisms as tiny dots
+    // Draw organisms as tiny dots with batching for performance
     ctx.fillStyle = 'rgba(0, 255, 0, 0.8)';
-    const visibleOrganisms = organismPositions.slice(0, maxDots);
-    
-    // Batch rendering for better performance
     ctx.beginPath();
-    visibleOrganisms.forEach(pos => {
-      ctx.rect(
-        pos.x * mapScale - 0.75, 
-        pos.y * mapScale - 0.75, 
-        1.5, 1.5
-      );
+    
+    organismPositions.slice(0, maxDots).forEach(pos => {
+      const x = pos.x * mapScale;
+      const y = pos.y * mapScale;
+      
+      if (x >= 0 && x <= minimapSize && y >= 0 && y <= minimapSize) {
+        ctx.rect(x - 0.75, y - 0.75, 1.5, 1.5);
+      }
     });
+    
     ctx.fill();
     
-    // Draw food as tiny dots
+    // Draw food as tiny dots with batching for performance
     ctx.fillStyle = 'rgba(255, 255, 0, 0.8)';
-    const visibleFood = foodPositions.slice(0, maxDots);
-    
-    // Batch rendering for better performance
     ctx.beginPath();
-    visibleFood.forEach(pos => {
-      ctx.rect(
-        pos.x * mapScale - 0.5, 
-        pos.y * mapScale - 0.5, 
-        1, 1
-      );
+    
+    foodPositions.slice(0, maxDots).forEach(pos => {
+      const x = pos.x * mapScale;
+      const y = pos.y * mapScale;
+      
+      if (x >= 0 && x <= minimapSize && y >= 0 && y <= minimapSize) {
+        ctx.rect(x - 0.5, y - 0.5, 1, 1);
+      }
     });
+    
     ctx.fill();
     
-  }, [canvasRef, viewportOffset, viewportScale, organismPositions, foodPositions, worldWidth, worldHeight]);
+  }, [canvasRef, viewportOffset, viewportScale, organismPositions, foodPositions, worldWidth, worldHeight, minimapSize]);
   
   return (
     <div className="minimap-container">
       <canvas
         ref={minimapRef}
-        width={100}
-        height={100}
+        width={minimapSize}
+        height={minimapSize}
         className="minimap-canvas"
       />
     </div>
