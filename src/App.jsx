@@ -1,34 +1,37 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { useState, useRef } from 'react'
 import './App.css'
+import SimulationManager from './components/SimulationManager'
+import SimpleSimulation from './simulations/SimpleSimulation'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [simulationAdapter] = useState(() => new SimpleSimulation());
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <div className="App">
+      <SimulationManager 
+        simulationAdapter={simulationAdapter}
+        title="Simple Evolution Simulation"
+        helpContent={
+          <>
+            <h3>Evolution Simulation</h3>
+            <p>This is a basic simulation with organisms moving around in a virtual environment.</p>
+            <p>Controls:</p>
+            <ul>
+              <li>Drag to pan the view</li>
+              <li>Scroll to zoom in/out</li>
+              <li>Click on an organism to view its details</li>
+            </ul>
+            <p>Adjust parameters below to control the simulation behavior.</p>
+          </>
+        }
+        initialParameters={{
+          organismCount: 20,
+          foodAmount: 50,
+          speed: 1.0,
+          entitySize: 5
+        }}
+      />
+    </div>
   )
 }
 

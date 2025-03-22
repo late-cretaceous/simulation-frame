@@ -12,8 +12,7 @@ const SimulationStats = ({
   showRestartConfirmation,
   onConfirmRestart,
   onCancelRestart,
-  lastAutosaveTime,
-  speed
+  lastAutosaveTime
 }) => {
   // Format the last autosave time
   const formatLastSaveTime = () => {

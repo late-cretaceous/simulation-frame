@@ -40,3 +40,405 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Organism Viewer */
+.organism-viewer {
+  background-color: #1a1a1a;
+  border-radius: 8px;
+  padding: 1em;
+  margin-top: 1em;
+}
+
+.empty-viewer {
+  text-align: center;
+  padding: 2em;
+}
+
+.viewer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1em;
+}
+
+.viewer-header h3 {
+  margin: 0;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 1.5em;
+  cursor: pointer;
+}
+
+.close-button:hover {
+  color: #fff;
+}
+
+.organism-properties {
+  margin: 1em 0;
+}
+
+.property-row {
+  display: flex;
+  justify-content: space-between;
+  margin: 0.5em 0;
+  padding: 0.5em;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.property-name {
+  font-weight: 500;
+}
+
+.viewer-actions {
+  margin-top: 1em;
+  text-align: center;
+}
+
+.library-button {
+  background-color: #646cff;
+  color: white;
+  border: none;
+  padding: 0.5em 1em;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.library-button:hover {
+  background-color: #535bf2;
+}
+
+/* Organism Library */
+.organism-library-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.library-content {
+  background-color: #1a1a1a;
+  border-radius: 8px;
+  width: 80%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 2em;
+}
+
+.library-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1em;
+}
+
+.organisms-list {
+  max-height: 50vh;
+  overflow-y: auto;
+  margin: 1em 0;
+}
+
+.organism-item {
+  padding: 1em;
+  margin: 0.5em 0;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.organism-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.organism-item.selected {
+  background-color: rgba(100, 108, 255, 0.2);
+  border-left: 3px solid #646cff;
+}
+
+.organism-name {
+  font-weight: bold;
+  margin-bottom: 0.5em;
+}
+
+.organism-notes {
+  font-size: 0.9em;
+  color: #888;
+}
+
+.empty-library {
+  text-align: center;
+  padding: 2em;
+  color: #888;
+}
+
+.library-actions {
+  margin-top: 1em;
+  text-align: center;
+}
+
+.save-form {
+  padding: 1em;
+}
+
+.form-row {
+  margin: 1em 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-row label {
+  margin-bottom: 0.5em;
+}
+
+.form-row input, .form-row textarea {
+  padding: 0.5em;
+  background-color: #2c2c2c;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: white;
+}
+
+.form-row textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1em;
+  margin-top: 1em;
+}
+
+/* Simulation Canvas */
+.simulation-canvas-container {
+  border: 1px solid #333;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.simulation-canvas {
+  background-color: #111;
+}
+
+.canvas-instructions {
+  padding: 0.5em;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: #ccc;
+  font-size: 0.8em;
+  text-align: center;
+}
+
+.minimap-container {
+  position: absolute;
+  bottom: 1em;
+  right: 1em;
+  z-index: 10;
+  border: 1px solid #555;
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+.viewport-controls {
+  position: absolute;
+  top: 1em;
+  right: 1em;
+  z-index: 10;
+  display: flex;
+  gap: 0.5em;
+}
+
+.viewport-controls button {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: 1px solid #555;
+  font-size: 1.2em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Stats */
+.stats-container {
+  margin-top: 1em;
+  padding: 1em;
+  background-color: #1a1a1a;
+  border-radius: 8px;
+}
+
+.stats-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1em;
+}
+
+.stats-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1em;
+}
+
+.stats-value {
+  padding: 0.5em;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.buttons-container {
+  display: flex;
+  gap: 0.5em;
+}
+
+.button {
+  padding: 0.5em 1em;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+}
+
+.button-blue {
+  background-color: #4a8ef4;
+  color: white;
+}
+
+.button-red {
+  background-color: #f44a4a;
+  color: white;
+}
+
+.button-green {
+  background-color: #4af44a;
+  color: black;
+}
+
+.stats-details {
+  margin-top: 1em;
+  font-size: 0.8em;
+  color: #888;
+}
+
+.autosave-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.restart-warning {
+  margin-top: 1em;
+  padding: 0.5em;
+  background-color: rgba(244, 74, 74, 0.2);
+  border-left: 3px solid #f44a4a;
+  color: #f44a4a;
+  border-radius: 4px;
+}
+
+/* Help Panel */
+.help-toggle {
+  margin-bottom: 1em;
+  width: 100%;
+  padding: 0.5em;
+  background-color: #2c2c2c;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+}
+
+.help-content {
+  padding: 1em;
+  background-color: #1a1a1a;
+  border-radius: 8px;
+  margin-bottom: 1em;
+}
+
+.help-content p {
+  margin: 0.5em 0;
+}
+
+.help-content ul {
+  margin: 0.5em 0;
+  padding-left: 1.5em;
+}
+
+/* Controls */
+.controls-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  margin-top: 1em;
+}
+
+.control-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+}
+
+.control-label {
+  font-weight: 500;
+}
+
+.control-slider {
+  width: 100%;
+}
+
+.control-value {
+  text-align: right;
+  font-size: 0.9em;
+  color: #888;
+}
+
+/* Layout */
+.simulator-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1em;
+}
+
+.simulator-title {
+  margin-bottom: 1em;
+}
+
+.simulator-layout {
+  display: grid;
+  gap: 1em;
+}
+
+.layout-default {
+  grid-template-columns: 3fr 1fr;
+}
+
+.layout-with-viewer {
+  grid-template-columns: 3fr 1fr;
+}
+
+@media (max-width: 768px) {
+  .layout-default, .layout-with-viewer {
+    grid-template-columns: 1fr;
+  }
+}
+
+.autosave-notice {
+  padding: 0.5em;
+  background-color: rgba(100, 108, 255, 0.2);
+  border-left: 3px solid #646cff;
+  margin-bottom: 1em;
+  border-radius: 4px;
+}
