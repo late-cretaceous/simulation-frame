@@ -71,7 +71,7 @@ const SimulationStats = ({
               className="button button-red"
               data-tooltip="Reset the simulation"
             >
-              <span className="button-icon">🔄</span>
+              <span className="button-icon">↺</span>
               <span className="button-text">Restart</span>
             </button>
           ) : (
