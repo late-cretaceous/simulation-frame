@@ -2,160 +2,119 @@ import React from 'react';
 
 /**
  * Controls for adjusting simulation parameters with enhanced UI
+ * Now supports dynamic parameters defined by each simulation
  */
-const SimulationControls = ({ setParameters, ...parameters }) => {
-  // Extract parameter information
-  const parameterDefs = Object.entries(parameters).map(([key, value]) => {
-    const isNumeric = typeof value === 'number';
-    const isBoolean = typeof value === 'boolean';
-    
-    // Generate a label from the key (e.g., "foodAmount" -> "Food Amount")
-    const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-    
-    // Determine parameter properties
-    let min, max, step;
-    if (isNumeric) {
-      // Default ranges based on parameter name patterns
-      if (key.includes('Count') || key.includes('Amount')) {
-        min = 0;
-        max = value * 2 || 100;
-        step = 1;
-      } else if (key.includes('Size')) {
-        min = 1;
-        max = 20;
-        step = 1;
-      } else if (key.includes('Speed') || key.includes('Rate')) {
-        min = 0;
-        max = 2;
-        step = 0.1;
-      } else {
-        min = 0;
-        max = 100;
-        step = Number.isInteger(value) ? 1 : 0.1;
-      }
-    }
-    
-    return {
-      key,
-      value,
-      isNumeric,
-      isBoolean,
-      label,
-      min,
-      max,
-      step,
-      // Generate an appropriate tooltip description
-      tooltip: getTooltipForParameter(key)
-    };
-  });
-  
+const SimulationControls = ({ parameters, parameterMetadata, setParameters }) => {
   // Handle parameter change
   const handleChange = (key, value) => {
     setParameters(key, value);
   };
   
   // Handle numeric input change to validate numbers
-  const handleNumericInputChange = (key, inputValue, paramDef) => {
+  const handleNumericInputChange = (key, inputValue, metadata) => {
     const numValue = parseFloat(inputValue);
-    if (!isNaN(numValue) && numValue >= paramDef.min && numValue <= paramDef.max) {
-      handleChange(key, Number.isInteger(paramDef.value) ? Math.round(numValue) : numValue);
+    if (!isNaN(numValue) && numValue >= metadata.min && numValue <= metadata.max) {
+      handleChange(key, Number.isInteger(parameters[key]) ? Math.round(numValue) : numValue);
     }
   };
   
-  // Get tooltip description for parameter
-  function getTooltipForParameter(key) {
-    const tooltips = {
-      organismCount: "Number of organisms in the simulation",
-      foodAmount: "Amount of food available in the environment",
-      speed: "Speed multiplier for the simulation",
-      entitySize: "Size of the organism entities"
-    };
-    
-    return tooltips[key] || `Adjust the ${key.replace(/([A-Z])/g, ' $1').toLowerCase()} parameter`;
+  // If no parameters or metadata available, show a message
+  if (!parameters || !parameterMetadata || Object.keys(parameterMetadata).length === 0) {
+    return (
+      <div className="controls-container">
+        <h3 className="controls-header">Simulation Parameters</h3>
+        <div className="controls-body">
+          <p className="no-parameters-message">No adjustable parameters available for this simulation.</p>
+        </div>
+      </div>
+    );
   }
   
   return (
     <div className="controls-container">
       <h3 className="controls-header">Simulation Parameters</h3>
       <div className="controls-body">
-        {parameterDefs.map((param) => (
-          <div key={param.key} className="control-item">
-            <div className="control-header">
-              <label className="control-label" htmlFor={`param-${param.key}`}>
-                {param.label}
-              </label>
-              <div className="control-value">
-                {param.isNumeric ? (
-                  <>
+        {Object.keys(parameterMetadata).map((key) => {
+          const metadata = parameterMetadata[key];
+          const value = parameters[key];
+          
+          return (
+            <div key={key} className="control-item">
+              <div className="control-header">
+                <label className="control-label" htmlFor={`param-${key}`}>
+                  {metadata.label}
+                </label>
+                <div className="control-value">
+                  {metadata.type === 'number' ? (
                     <input
                       type="number"
-                      id={`param-input-${param.key}`}
-                      value={param.value}
-                      min={param.min}
-                      max={param.max}
-                      step={param.step}
-                      onChange={(e) => handleNumericInputChange(param.key, e.target.value, param)}
+                      id={`param-input-${key}`}
+                      value={value}
+                      min={metadata.min}
+                      max={metadata.max}
+                      step={metadata.step}
+                      onChange={(e) => handleNumericInputChange(key, e.target.value, metadata)}
                       className="control-number-input"
                     />
-                  </>
-                ) : param.isBoolean ? (
-                  param.value ? "On" : "Off"
-                ) : (
-                  param.value
-                )}
-              </div>
-            </div>
-            
-            {param.isNumeric && (
-              <div className="control-slider-container">
-                <input 
-                  type="range" 
-                  id={`param-${param.key}`}
-                  min={param.min} 
-                  max={param.max} 
-                  step={param.step} 
-                  value={param.value} 
-                  onChange={(e) => handleChange(
-                    param.key, 
-                    Number.isInteger(param.value) ? 
-                      parseInt(e.target.value) : 
-                      parseFloat(e.target.value)
+                  ) : metadata.type === 'boolean' ? (
+                    value ? "On" : "Off"
+                  ) : (
+                    value
                   )}
-                  className="control-slider"
-                  data-tooltip={param.tooltip}
-                />
-                <div className="slider-markers">
-                  <span className="slider-min">{param.min}</span>
-                  <span className="slider-max">{param.max}</span>
                 </div>
               </div>
-            )}
-            
-            {param.isBoolean && (
-              <label className="control-switch">
+              
+              {metadata.type === 'number' && (
+                <div className="control-slider-container">
+                  <input 
+                    type="range" 
+                    id={`param-${key}`}
+                    min={metadata.min} 
+                    max={metadata.max} 
+                    step={metadata.step} 
+                    value={value} 
+                    onChange={(e) => handleChange(
+                      key, 
+                      Number.isInteger(value) ? 
+                        parseInt(e.target.value) : 
+                        parseFloat(e.target.value)
+                    )}
+                    className="control-slider"
+                    data-tooltip={metadata.description}
+                  />
+                  <div className="slider-markers">
+                    <span className="slider-min">{metadata.min}</span>
+                    <span className="slider-max">{metadata.max}</span>
+                  </div>
+                </div>
+              )}
+              
+              {metadata.type === 'boolean' && (
+                <label className="control-switch">
+                  <input 
+                    type="checkbox" 
+                    checked={value} 
+                    onChange={(e) => handleChange(key, e.target.checked)}
+                    data-tooltip={metadata.description}
+                  />
+                  <span className="switch-slider"></span>
+                </label>
+              )}
+              
+              {metadata.type === 'string' && (
                 <input 
-                  type="checkbox" 
-                  checked={param.value} 
-                  onChange={(e) => handleChange(param.key, e.target.checked)}
-                  data-tooltip={param.tooltip}
+                  type="text" 
+                  value={value} 
+                  onChange={(e) => handleChange(key, e.target.value)}
+                  className="control-text-input"
+                  data-tooltip={metadata.description}
                 />
-                <span className="switch-slider"></span>
-              </label>
-            )}
-            
-            {!param.isNumeric && !param.isBoolean && (
-              <input 
-                type="text" 
-                value={param.value} 
-                onChange={(e) => handleChange(param.key, e.target.value)}
-                className="control-text-input"
-                data-tooltip={param.tooltip}
-              />
-            )}
-            
-            <p className="control-description">{param.tooltip}</p>
-          </div>
-        ))}
+              )}
+              
+              <p className="control-description">{metadata.description}</p>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

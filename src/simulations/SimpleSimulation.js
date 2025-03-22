@@ -96,7 +96,7 @@ class RenderingSystem extends BaseSystem {
     // Clear canvas
     const canvas = this.context.canvas;
     this.context.clearRect(0, 0, canvas.width / (this.context.pixelRatio || 1), 
-                                 canvas.height / (this.context.pixelRatio || 1));
+                               canvas.height / (this.context.pixelRatio || 1));
     
     // Render organisms
     const entities = this.world.getEntitiesWithComponent('PositionComponent');
@@ -267,6 +267,43 @@ export class SimpleSimulation extends SimulationAdapter {
   
   getParameters() {
     return this.parameters;
+  }
+  
+  getParameterMetadata() {
+    return {
+      speed: {
+        type: 'number',
+        label: 'Simulation Speed',
+        min: 0.1,
+        max: 3.0,
+        step: 0.1,
+        description: 'Controls how fast the simulation runs'
+      },
+      organismCount: {
+        type: 'number',
+        label: 'Organism Count',
+        min: 1,
+        max: 100,
+        step: 1,
+        description: 'Number of organisms in the simulation'
+      },
+      foodAmount: {
+        type: 'number',
+        label: 'Food Amount',
+        min: 0,
+        max: 200,
+        step: 5,
+        description: 'Amount of food available in the environment'
+      },
+      entitySize: {
+        type: 'number',
+        label: 'Organism Size',
+        min: 1,
+        max: 15,
+        step: 1,
+        description: 'Visual size of organisms'
+      }
+    };
   }
   
   setParameter(key, value) {

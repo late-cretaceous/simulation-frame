@@ -26,6 +26,7 @@ const SimulationManager = ({
   const [generation, setGeneration] = useState(0);
   const [statistics, setStatistics] = useState({});
   const [parameters, setParameters] = useState(initialParameters);
+  const [parameterMetadata, setParameterMetadata] = useState({});
   const [selectedEntity, setSelectedEntity] = useState(null);
   const [showLibrary, setShowLibrary] = useState(false);
   const [showRestartConfirmation, setShowRestartConfirmation] = useState(false);
@@ -46,6 +47,7 @@ const SimulationManager = ({
       if (ctx) {
         simulationAdapter.initialize(ctx, canvasRef.current.width, canvasRef.current.height);
         setParameters(simulationAdapter.getParameters());
+        setParameterMetadata(simulationAdapter.getParameterMetadata());
         setIsInitialized(true);
         
         // Try to load saved state
@@ -215,7 +217,6 @@ const SimulationManager = ({
             onConfirmRestart={confirmRestartSimulation}
             onCancelRestart={cancelRestartSimulation}
             lastAutosaveTime={lastAutosaveTime}
-            {...parameters}
           />
         </div>
         
@@ -223,7 +224,8 @@ const SimulationManager = ({
           <HelpPanel content={helpContent} />
           
           <SimulationControls 
-            {...parameters}
+            parameters={parameters}
+            parameterMetadata={parameterMetadata}
             setParameters={handleParameterChange}
           />
           
