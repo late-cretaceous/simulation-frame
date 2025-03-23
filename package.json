@@ -5,11 +5,13 @@
   "type": "module",
   "main": "./dist/simulation-frame.umd.js",
   "module": "./dist/simulation-frame.es.js",
+  "style": "./dist/simulation-frame.css",
   "exports": {
     ".": {
       "import": "./dist/simulation-frame.es.js",
       "require": "./dist/simulation-frame.umd.js"
     },
+    "./dist/simulation-frame.css": "./dist/simulation-frame.css",
     "./style.css": "./dist/simulation-frame.css"
   },
   "files": [

@@ -36,6 +36,24 @@ function App() {
 }
 ```
 
+## Importing Styles
+
+There are multiple ways to import the stylesheet:
+
+```js
+// Recommended way
+import 'simulation-frame/style.css';
+
+// Alternative ways that also work
+import 'simulation-frame/dist/simulation-frame.css';
+```
+
+Or you can reference it directly in your HTML:
+
+```html
+<link rel="stylesheet" href="node_modules/simulation-frame/dist/simulation-frame.css">
+```
+
 ## Features
 
 - Entity-Component-System architecture
