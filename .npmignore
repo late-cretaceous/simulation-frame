@@ -1,0 +1,17 @@
+# Development files
+.eslintrc.json
+.gitignore
+.github
+node_modules
+tests
+src
+public
+index.html
+*.log
+*.lock
+.DS_Store
+.vscode
+.idea
+
+# Only include the dist folder when publishing
+!dist/

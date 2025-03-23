@@ -1,18 +1,52 @@
+# Simulation Frame
+
+A React-based framework for building interactive entity-component-system simulations.
+
 ## Installation
 
 ```bash
-npm install github:late-cretaceous/simulation-frame
+# Install from npm
+npm install simulation-frame
+
+# Or with yarn
+yarn add simulation-frame
 ```
 
-You can also specify a specific branch, tag, or commit:
+## Usage
 
-```bash
-# Install from a specific branch
-npm install github:yourusername/simulation-frame#main
+```jsx
+import React from 'react';
+import { 
+  SimulationManager, 
+  SimulationCanvas, 
+  BaseWorld,
+  BaseEntity 
+} from 'simulation-frame';
 
-# Install from a specific tag
-npm install github:yourusername/simulation-frame#v0.1.0
-
-# Install from a specific commit
-npm install github:yourusername/simulation-frame#commit-hash
+function App() {
+  return (
+    <SimulationManager 
+      title="My Simulation"
+      simulationAdapter={mySimulationAdapter}
+      helpContent={<div>Help text goes here</div>}
+    />
+  );
+}
 ```
+
+## Features
+
+- Entity-Component-System architecture
+- Canvas rendering with pan/zoom support
+- Customizable simulation controls
+- Minimap navigation
+- Entity selection and inspection
+- Simulation state persistence
+
+## Documentation
+
+[Documentation link coming soon]
+
+## License
+
+MIT

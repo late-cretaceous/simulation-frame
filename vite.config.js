@@ -1,14 +1,18 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import path from 'path'
+import { resolve } from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = fileURLToPath(new URL('.', import.meta.url))
 
 export default defineConfig({
   plugins: [react()],
   build: {
     lib: {
-      entry: path.resolve(__dirname, 'src/index.js'),
+      entry: resolve(__dirname, 'src/index.js'),
       name: 'SimulationFrame',
-      fileName: (format) => `index.js`
+      fileName: (format) => `simulation-frame.${format}.js`,
+      formats: ['es', 'umd']
     },
     rollupOptions: {
       external: ['react', 'react-dom'],
@@ -18,6 +22,9 @@ export default defineConfig({
           'react-dom': 'ReactDOM'
         }
       }
-    }
+    },
+    sourcemap: true,
+    minify: 'esbuild', // Change from terser to esbuild
+    outDir: 'dist'
   }
 })
