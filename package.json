@@ -9,7 +9,8 @@
     ".": {
       "import": "./dist/simulation-frame.es.js",
       "require": "./dist/simulation-frame.umd.js"
-    }
+    },
+    "./style.css": "./dist/simulation-frame.css"
   },
   "files": [
     "dist",

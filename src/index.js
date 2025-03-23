@@ -1,3 +1,6 @@
+import './App.css';
+import './index.css';
+
 // Main components
 export { default as SimulationManager } from './components/SimulationManager';
 export { default as SimulationCanvas } from './components/SimulationCanvas';

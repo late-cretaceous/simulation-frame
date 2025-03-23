@@ -22,6 +22,8 @@ import {
   BaseWorld,
   BaseEntity 
 } from 'simulation-frame';
+// Import the CSS
+import 'simulation-frame/style.css';
 
 function App() {
   return (
