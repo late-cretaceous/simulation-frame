@@ -11,7 +11,6 @@
       "import": "./dist/simulation-frame.es.js",
       "require": "./dist/simulation-frame.umd.js"
     },
-    "./dist/simulation-frame.css": "./dist/simulation-frame.css",
     "./style.css": "./dist/simulation-frame.css"
   },
   "files": [

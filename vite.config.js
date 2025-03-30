@@ -21,12 +21,13 @@ export default defineConfig({
           'react-dom': 'ReactDOM'
         },
         assetFileNames: (assetInfo) => {
-          if (assetInfo.name === 'style.css') return 'simulation-frame.css';
+          // Rename all CSS files to simulation-frame.css
+          if (assetInfo.name.endsWith('.css')) return 'simulation-frame.css';
           return assetInfo.name;
         }
       }
     },
-    cssCodeSplit: false,
+    cssCodeSplit: false, // Important: Keep CSS in a single file
     sourcemap: true,
     minify: 'esbuild',
     outDir: 'dist'
