@@ -18,8 +18,8 @@ const useStorage = (storageKey) => {
       
       localStorage.setItem(storageKey, serializedState);
       return true;
-    } catch (error) {
-      console.error('Failed to save state:', error);
+    } catch (_) {
+      console.error('Failed to save state');
       return false;
     }
   }, [storageKey]);
@@ -46,8 +46,8 @@ const useStorage = (storageKey) => {
       }
       
       return state;
-    } catch (error) {
-      console.error('Failed to load state, clearing corrupted data:', error);
+    } catch (_) {
+      console.error('Failed to load state, clearing corrupted data');
       localStorage.removeItem(storageKey);
       return null;
     }
@@ -61,8 +61,8 @@ const useStorage = (storageKey) => {
     try {
       localStorage.removeItem(storageKey);
       return true;
-    } catch (error) {
-      console.error('Failed to clear state:', error);
+    } catch (_) {
+      console.error('Failed to clear state');
       return false;
     }
   }, [storageKey]);
@@ -75,7 +75,7 @@ const useStorage = (storageKey) => {
     try {
       const state = localStorage.getItem(storageKey);
       return !!state;
-    } catch (error) {
+    } catch (_) {
       return false;
     }
   }, [storageKey]);

@@ -35,22 +35,6 @@ const OrganismLibrary = ({
     }
   };
   
-  // Enter save mode
-  const enterSaveMode = (entity) => {
-    setSaveMode(true);
-    setCurrentEntity(entity);
-    setSaveName(entity.name || '');
-    setSaveNotes('');
-  };
-  
-  // Cancel save
-  const cancelSave = () => {
-    setSaveMode(false);
-    setCurrentEntity(null);
-    setSaveName('');
-    setSaveNotes('');
-  };
-  
   // Save organism
   const handleSave = () => {
     if (!currentEntity || !saveName) return;
@@ -66,6 +50,14 @@ const OrganismLibrary = ({
       setSaveName('');
       setSaveNotes('');
     }
+  };
+  
+  // Cancel save
+  const cancelSave = () => {
+    setSaveMode(false);
+    setCurrentEntity(null);
+    setSaveName('');
+    setSaveNotes('');
   };
   
   return (

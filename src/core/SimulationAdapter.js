@@ -36,19 +36,19 @@ export class SimulationAdapter {
 
   /**
    * Initialize the simulation
-   * @param {CanvasRenderingContext2D} canvasContext - Canvas rendering context
-   * @param {number} width - Canvas width
-   * @param {number} height - Canvas height
+   * @param {CanvasRenderingContext2D} _canvasContext - Canvas rendering context
+   * @param {number} _width - Canvas width
+   * @param {number} _height - Canvas height
    */
-  initialize(canvasContext, width, height) {
+  initialize(_canvasContext, _width, _height) {
     throw new Error("Method 'initialize' must be implemented");
   }
 
   /**
    * Update the simulation state
-   * @param {number} deltaTime - Time elapsed since last update in seconds
+   * @param {number} _deltaTime - Time elapsed since last update in seconds
    */
-  update(deltaTime) {
+  update(_deltaTime) {
     throw new Error("Method 'update' must be implemented");
   }
 
@@ -65,12 +65,12 @@ export class SimulationAdapter {
 
   /**
    * Select an entity at the given coordinates
-   * @param {number} x - X coordinate (screen coordinates)
-   * @param {number} y - Y coordinate (screen coordinates)
-   * @param {Object} viewportInfo - Information about the viewport (offset, scale)
+   * @param {number} _x - X coordinate (screen coordinates)
+   * @param {number} _y - Y coordinate (screen coordinates)
+   * @param {Object} _viewportInfo - Information about the viewport (offset, scale)
    * @returns {Object|null} - Selected entity data or null if none selected
    */
-  selectEntityAt(x, y, viewportInfo) {
+  selectEntityAt(_x, _y, _viewportInfo) {
     return null;
   }
 
@@ -92,10 +92,10 @@ export class SimulationAdapter {
 
   /**
    * Set a parameter value
-   * @param {string} key - Parameter key
-   * @param {any} value - Parameter value
+   * @param {string} _key - Parameter key
+   * @param {any} _value - Parameter value
    */
-  setParameter(key, value) {
+  setParameter(_key, _value) {
     throw new Error("Method 'setParameter' must be implemented");
   }
 
@@ -130,21 +130,21 @@ export class SimulationAdapter {
 
   /**
    * Load a saved simulation state
-   * @param {Object} state - Saved state object
+   * @param {Object} _state - Saved state object
    * @returns {boolean} - Success status
    */
-  loadState(state) {
+  loadState(_state) {
     return false;
   }
 
   /**
    * Save an entity to the library
-   * @param {Object} entity - Entity data
-   * @param {string} name - Entity name
-   * @param {string} notes - Entity notes
+   * @param {Object} _entity - Entity data
+   * @param {string} _name - Entity name
+   * @param {string} _notes - Entity notes
    * @returns {Object|null} - Saved entity or null if failed
    */
-  saveEntityToLibrary(entity, name, notes) {
+  saveEntityToLibrary(_entity, _name, _notes) {
     return null;
   }
 

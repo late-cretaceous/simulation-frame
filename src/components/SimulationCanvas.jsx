@@ -94,7 +94,7 @@ const SimulationCanvas = ({
     return () => {
       window.removeEventListener("resize", handleResize);
     };
-  }, [viewportOffset, scale, pixelRatio]);
+  }, [viewportOffset, scale, pixelRatio, canvasRef]);
 
   return (
     <div

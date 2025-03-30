@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import './App.css'
 import SimulationManager from './components/SimulationManager'
 import SimpleSimulation from './simulations/SimpleSimulation'

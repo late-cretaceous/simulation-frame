@@ -30,7 +30,7 @@ const useCanvasInteraction = ({
     const initialY = (container.clientHeight / scale - container.clientHeight) / 2;
     
     setViewportOffset({ x: initialX, y: initialY });
-  }, [scale]);
+  }, [scale, containerRef]);
   
   // Apply viewport transform when it changes
   useEffect(() => {
@@ -54,7 +54,7 @@ const useCanvasInteraction = ({
     // Store viewport info on context
     ctx.viewportOffset = viewportOffset;
     ctx.viewportScale = scale;
-  }, [viewportOffset, scale]);
+  }, [viewportOffset, scale, canvasRef]);
   
   // Reset viewport to center
   const resetViewport = () => {
