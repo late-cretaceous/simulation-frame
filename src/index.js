@@ -10,7 +10,6 @@ export { default as HelpPanel } from './components/HelpPanel';
 export { default as OrganismViewer } from './components/OrganismViewer';
 export { default as OrganismLibrary } from './components/OrganismLibrary';
 export { default as MinimapOverlay } from './components/MinimapOverlay';
-export { default as SimulationTemplate } from './templates/SimulationTemplate';
 
 // Core classes
 export { default as SimulationAdapter } from './core/SimulationAdapter';
@@ -26,6 +25,8 @@ export { default as useAnimationLoop } from './hooks/useAnimationLoop';
 export { default as useStorage } from './hooks/useStorage';
 
 // Utilities
+export { default as CanvasRenderer } from './utils/CanvasRenderer';
+export { default as SimulationTemplate } from './templates/SimulationTemplate';
 export {
   saveToStorage,
   loadFromStorage,

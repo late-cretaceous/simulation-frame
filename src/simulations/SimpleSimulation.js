@@ -84,7 +84,7 @@ class PhysicsSystem {
   }
 }
 
-// Rendering system
+// Rendering system with proper canvas clearing
 class RenderingSystem {
   constructor() {
     this.world = null;
@@ -106,10 +106,20 @@ class RenderingSystem {
     if (!this.world || !this.context) return;
     
     try {
-      // Clear canvas
-      const canvas = this.context.canvas;
-      this.context.clearRect(0, 0, canvas.width / (this.context.pixelRatio || 1), 
-                               canvas.height / (this.context.pixelRatio || 1));
+      const ctx = this.context;
+      const canvas = ctx.canvas;
+      
+      // Save the current transformation state
+      ctx.save();
+      
+      // Reset the transformation matrix to identity
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      
+      // Clear the entire canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Restore the transformation state for drawing
+      ctx.restore();
       
       // Render entities
       const entities = this.world.getEntitiesWithComponent('PositionComponent');
@@ -120,19 +130,19 @@ class RenderingSystem {
         
         if (entity.hasComponent('FoodComponent')) {
           // Draw food
-          this.context.beginPath();
-          this.context.arc(position.x, position.y, 2, 0, Math.PI * 2);
-          this.context.fillStyle = '#ffff00';
-          this.context.fill();
+          ctx.beginPath();
+          ctx.arc(position.x, position.y, 2, 0, Math.PI * 2);
+          ctx.fillStyle = '#ffff00';
+          ctx.fill();
         } else {
           // Draw organism
           const appearance = entity.getComponent('AppearanceComponent');
           if (!appearance) continue;
           
-          this.context.beginPath();
-          this.context.arc(position.x, position.y, appearance.size, 0, Math.PI * 2);
-          this.context.fillStyle = appearance.color;
-          this.context.fill();
+          ctx.beginPath();
+          ctx.arc(position.x, position.y, appearance.size, 0, Math.PI * 2);
+          ctx.fillStyle = appearance.color;
+          ctx.fill();
         }
       }
     } catch (error) {

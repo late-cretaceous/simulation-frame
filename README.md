@@ -234,6 +234,24 @@ class MySimulation extends SimulationAdapter {
 }
 ```
 
+### CanvasRenderer
+
+Helper for proper canvas rendering with features to prevent trailing artifacts and support high-DPI displays:
+
+```javascript
+// Create a renderer with an existing canvas and context
+const renderer = new CanvasRenderer(canvas, context);
+
+// In your render system update method
+renderer.beginFrame();  // Properly clears canvas
+renderer.drawCircle(x, y, radius, color);
+renderer.drawRect(x, y, width, height, color);
+renderer.endFrame();
+
+// Convert between screen and world coordinates
+const worldPos = renderer.screenToWorld(mouseX, mouseY);
+```
+
 ## Troubleshooting
 
 ### Common Issues
@@ -268,6 +286,14 @@ class MySimulation extends SimulationAdapter {
      console.error('Required objects not initialized');
      return;
    }
+   ```
+
+5. **Entities leaving trails**: Use the CanvasRenderer to properly clear the canvas
+   ```javascript
+   // Instead of manually clearing:
+   renderer.beginFrame(); // Properly clears the entire canvas
+   // Draw entities...
+   renderer.endFrame();
    ```
 
 ## Examples
