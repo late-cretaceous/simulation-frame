@@ -1,8 +1,6 @@
 import SimulationAdapter from '../core/SimulationAdapter';
 import BaseWorld from '../core/BaseWorld';
-import BaseEntity from '../core/BaseEntity';
 import BaseComponent from '../core/BaseComponent';
-import BaseSystem from '../core/BaseSystem';
 
 // Position component
 class PositionComponent extends BaseComponent {
@@ -31,15 +29,6 @@ class AppearanceComponent extends BaseComponent {
   }
 }
 
-// Energy component
-class EnergyComponent extends BaseComponent {
-  constructor(energy = 100, maxEnergy = 100) {
-    super();
-    this.energy = energy;
-    this.maxEnergy = maxEnergy;
-  }
-}
-
 // Food component
 class FoodComponent extends BaseComponent {
   constructor(energy = 50) {
@@ -49,78 +38,105 @@ class FoodComponent extends BaseComponent {
 }
 
 // Physics system
-class PhysicsSystem extends BaseSystem {
-  constructor(world) {
-    super(world);
+class PhysicsSystem {
+  constructor() {
+    this.world = null;
     this.worldWidth = 800;
     this.worldHeight = 600;
   }
   
+  // Store world reference
+  setWorld(world) {
+    this.world = world;
+  }
+  
   update(deltaTime) {
-    const entities = this.world.getEntitiesWithComponent('PositionComponent');
+    // Skip if world is not set
+    if (!this.world) return;
     
-    for (const entity of entities) {
-      if (entity.components.has('VelocityComponent')) {
-        const position = entity.components.get('PositionComponent');
-        const velocity = entity.components.get('VelocityComponent');
-        
-        // Update position based on velocity
-        position.x += velocity.vx * deltaTime;
-        position.y += velocity.vy * deltaTime;
-        
-        // Bounce off world boundaries
-        if (position.x < 0 || position.x > this.worldWidth) {
-          velocity.vx *= -1;
-          position.x = Math.max(0, Math.min(position.x, this.worldWidth));
-        }
-        
-        if (position.y < 0 || position.y > this.worldHeight) {
-          velocity.vy *= -1;
-          position.y = Math.max(0, Math.min(position.y, this.worldHeight));
+    try {
+      const entities = this.world.getEntitiesWithComponent('PositionComponent');
+      
+      for (const entity of entities) {
+        if (entity.hasComponent('VelocityComponent')) {
+          const position = entity.getComponent('PositionComponent');
+          const velocity = entity.getComponent('VelocityComponent');
+          
+          // Update position based on velocity
+          position.x += velocity.vx * deltaTime;
+          position.y += velocity.vy * deltaTime;
+          
+          // Bounce off world boundaries
+          if (position.x < 0 || position.x > this.worldWidth) {
+            velocity.vx *= -1;
+            position.x = Math.max(0, Math.min(position.x, this.worldWidth));
+          }
+          
+          if (position.y < 0 || position.y > this.worldHeight) {
+            velocity.vy *= -1;
+            position.y = Math.max(0, Math.min(position.y, this.worldHeight));
+          }
         }
       }
+    } catch (error) {
+      console.error('PhysicsSystem update error:', error);
     }
   }
 }
 
 // Rendering system
-class RenderingSystem extends BaseSystem {
-  constructor(world, context) {
-    super(world);
+class RenderingSystem {
+  constructor() {
+    this.world = null;
+    this.context = null;
+  }
+  
+  // Initialize with context
+  initialize(context) {
     this.context = context;
   }
   
+  // Store world reference
+  setWorld(world) {
+    this.world = world;
+  }
+  
   update() {
-    if (!this.context) return;
+    // Skip if world or context is not set
+    if (!this.world || !this.context) return;
     
-    // Clear canvas
-    const canvas = this.context.canvas;
-    this.context.clearRect(0, 0, canvas.width / (this.context.pixelRatio || 1), 
+    try {
+      // Clear canvas
+      const canvas = this.context.canvas;
+      this.context.clearRect(0, 0, canvas.width / (this.context.pixelRatio || 1), 
                                canvas.height / (this.context.pixelRatio || 1));
-    
-    // Render organisms
-    const entities = this.world.getEntitiesWithComponent('PositionComponent');
-    
-    for (const entity of entities) {
-      const position = entity.components.get('PositionComponent');
-      if (!position) continue;
       
-      if (entity.components.has('FoodComponent')) {
-        // Draw food
-        this.context.beginPath();
-        this.context.arc(position.x, position.y, 2, 0, Math.PI * 2);
-        this.context.fillStyle = '#ffff00';
-        this.context.fill();
-      } else {
-        // Draw organism
-        const appearance = entity.components.get('AppearanceComponent');
-        if (!appearance) continue;
+      // Render entities
+      const entities = this.world.getEntitiesWithComponent('PositionComponent');
+      
+      for (const entity of entities) {
+        const position = entity.getComponent('PositionComponent');
+        if (!position) continue;
         
-        this.context.beginPath();
-        this.context.arc(position.x, position.y, appearance.size, 0, Math.PI * 2);
-        this.context.fillStyle = appearance.color;
-        this.context.fill();
+        if (entity.hasComponent('FoodComponent')) {
+          // Draw food
+          this.context.beginPath();
+          this.context.arc(position.x, position.y, 2, 0, Math.PI * 2);
+          this.context.fillStyle = '#ffff00';
+          this.context.fill();
+        } else {
+          // Draw organism
+          const appearance = entity.getComponent('AppearanceComponent');
+          if (!appearance) continue;
+          
+          this.context.beginPath();
+          this.context.arc(position.x, position.y, appearance.size, 0, Math.PI * 2);
+          this.context.fillStyle = appearance.color;
+          this.context.fill();
+        }
       }
+    } catch (error) {
+      console.error('RenderingSystem update error:', error);
     }
   }
 }
@@ -129,51 +145,72 @@ class RenderingSystem extends BaseSystem {
 export class SimpleSimulation extends SimulationAdapter {
   constructor() {
     super();
-    this.world = new BaseWorld();
-    this.context = null;
-    this.width = 800;
-    this.height = 600;
-    this.isPaused = false;
-    this.generation = 0;
+    
+    // Initialize parameters
     this.parameters = {
       organismCount: 20,
       foodAmount: 50,
       speed: 1.0,
       entitySize: 5
     };
+    
+    // Create systems (but don't connect to world yet)
+    this.physicsSystem = new PhysicsSystem();
+    this.renderingSystem = new RenderingSystem();
+    
+    // Track generation
+    this.generation = 0;
   }
   
   initialize(canvasContext, width, height) {
-    this.context = canvasContext;
-    this.width = width / (canvasContext.pixelRatio || 1);
-    this.height = height / (canvasContext.pixelRatio || 1);
+    // Call parent initialize first - this creates and initializes the world
+    if (!super.initialize(canvasContext, width, height)) {
+      return false;
+    }
     
-    // Initialize systems
-    const physicsSystem = new PhysicsSystem(this.world);
-    physicsSystem.worldWidth = this.width;
-    physicsSystem.worldHeight = this.height;
+    // Now world is initialized, we can complete our setup
+    this.physicsSystem.worldWidth = this.width;
+    this.physicsSystem.worldHeight = this.height;
+    this.renderingSystem.initialize(this.context);
     
-    const renderingSystem = new RenderingSystem(this.world, this.context);
+    return true;
+  }
+  
+  // Override the _setupSystems method that's called after world initialization
+  _setupSystems() {
+    // Now it's safe to connect systems to world
+    this.physicsSystem.setWorld(this.world);
+    this.renderingSystem.setWorld(this.world);
     
-    this.world.addSystem(physicsSystem);
-    this.world.addSystem(renderingSystem);
+    // Add systems to world
+    this.world.addSystem(this.physicsSystem);
+    this.world.addSystem(this.renderingSystem);
     
     // Create initial entities
     this.reset();
   }
   
   update(deltaTime) {
-    if (this.isPaused) return;
+    if (this.isPaused) return false;
     
-    // Apply speed multiplier
-    const adjustedDelta = deltaTime * this.parameters.speed;
-    
-    // Update world
-    this.world.update(adjustedDelta);
-    
-    // Occasionally increase generation
-    if (Math.random() < 0.001 * adjustedDelta) {
-      this.generation++;
+    try {
+      // Apply speed multiplier
+      const adjustedDelta = deltaTime * this.parameters.speed;
+      
+      // Update world - this will update all systems
+      if (this.world && this.isInitialized) {
+        this.world.update(adjustedDelta);
+      }
+      
+      // Occasionally increase generation
+      if (Math.random() < 0.001 * adjustedDelta) {
+        this.generation++;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('SimpleSimulation update error:', error);
+      return false;
     }
   }
   
@@ -181,342 +218,143 @@ export class SimpleSimulation extends SimulationAdapter {
     const organisms = [];
     const food = [];
     
-    // Get organism positions
-    const entityPositions = this.world.getEntitiesWithComponent('PositionComponent');
-    
-    for (const entity of entityPositions) {
-      const position = entity.components.get('PositionComponent');
-      
-      if (entity.components.has('FoodComponent')) {
-        food.push({ x: position.x, y: position.y });
-      } else {
-        organisms.push({ x: position.x, y: position.y });
+    try {
+      // Skip if world is not initialized
+      if (!this.world || !this.isInitialized) {
+        return { organisms, food };
       }
+      
+      // Get entity positions
+      const entities = this.world.getEntitiesWithComponent('PositionComponent');
+      
+      for (const entity of entities) {
+        const position = entity.getComponent('PositionComponent');
+        if (!position) continue;
+        
+        if (entity.hasComponent('FoodComponent')) {
+          food.push({ x: position.x, y: position.y });
+        } else {
+          organisms.push({ x: position.x, y: position.y });
+        }
+      }
+    } catch (error) {
+      console.error('Error getting minimap entities:', error);
     }
     
     return { organisms, food };
   }
   
-  selectEntityAt(x, y, viewportInfo) {
-    const { offset, scale } = viewportInfo;
-    
-    // Convert screen coordinates to world coordinates
-    const worldX = (x - offset.x) / scale;
-    const worldY = (y - offset.y) / scale;
-    
-    // Find closest entity
-    const entities = this.world.getEntitiesWithComponent('PositionComponent');
-    let closestEntity = null;
-    let closestDistance = Infinity;
-    
-    for (const entity of entities) {
-      // Skip food entities
-      if (entity.components.has('FoodComponent')) continue;
-      
-      const position = entity.components.get('PositionComponent');
-      const appearance = entity.components.get('AppearanceComponent');
-      
-      if (!position || !appearance) continue;
-      
-      // Calculate distance
-      const dx = position.x - worldX;
-      const dy = position.y - worldY;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      
-      // Check if within entity bounds and closer than current closest
-      if (distance <= appearance.size && distance < closestDistance) {
-        closestEntity = entity;
-        closestDistance = distance;
+  // Other methods implementing SimulationAdapter interface...
+  
+  // The most important method - reset/create entities
+  reset() {
+    try {
+      // Skip if world is not initialized
+      if (!this.world || !this.isInitialized) {
+        return false;
       }
-    }
-    
-    if (closestEntity) {
-      // Return a simple object with entity data
-      const position = closestEntity.components.get('PositionComponent');
-      const appearance = closestEntity.components.get('AppearanceComponent');
-      const velocity = closestEntity.components.get('VelocityComponent');
-      const energy = closestEntity.components.get('EnergyComponent');
       
-      return {
-        id: closestEntity.id,
-        x: position.x,
-        y: position.y,
-        size: appearance.size,
-        color: appearance.color,
-        speed: Math.sqrt(velocity.vx * velocity.vx + velocity.vy * velocity.vy),
-        energy: energy ? energy.energy : null,
-        maxEnergy: energy ? energy.maxEnergy : null
-      };
-    }
-    
-    return null;
-  }
-  
-  getStatistics() {
-    const entities = this.world.getEntitiesWithComponent('PositionComponent');
-    const organisms = entities.filter(e => !e.components.has('FoodComponent'));
-    const food = entities.filter(e => e.components.has('FoodComponent'));
-    
-    return {
-      generation: this.generation,
-      organismCount: organisms.length,
-      foodCount: food.length,
-      entityCount: entities.length
-    };
-  }
-  
-  getParameters() {
-    return this.parameters;
-  }
-  
-  getParameterMetadata() {
-    return {
-      speed: {
-        type: 'number',
-        label: 'Simulation Speed',
-        min: 0.1,
-        max: 3.0,
-        step: 0.1,
-        description: 'Controls how fast the simulation runs'
-      },
-      organismCount: {
-        type: 'number',
-        label: 'Organism Count',
-        min: 1,
-        max: 100,
-        step: 1,
-        description: 'Number of organisms in the simulation'
-      },
-      foodAmount: {
-        type: 'number',
-        label: 'Food Amount',
-        min: 0,
-        max: 200,
-        step: 5,
-        description: 'Amount of food available in the environment'
-      },
-      entitySize: {
-        type: 'number',
-        label: 'Organism Size',
-        min: 1,
-        max: 15,
-        step: 1,
-        description: 'Visual size of organisms'
-      }
-    };
-  }
-  
-  setParameter(key, value) {
-    if (key in this.parameters) {
-      this.parameters[key] = value;
+      // Clear existing entities
+      this.world.clear();
+      this.generation = 0;
       
-      // Handle dynamic parameter changes
-      if (key === 'organismCount') {
-        this.updateOrganismCount(value);
-      } else if (key === 'foodAmount') {
-        this.updateFoodAmount(value);
-      } else if (key === 'entitySize') {
-        this.updateEntitySize(value);
+      // Create organisms
+      for (let i = 0; i < this.parameters.organismCount; i++) {
+        this.createOrganism();
       }
-    }
-  }
-  
-  updateOrganismCount(count) {
-    const entities = this.world.getEntitiesWithComponent('PositionComponent');
-    const organisms = entities.filter(e => !e.components.has('FoodComponent'));
-    
-    // If we need more organisms
-    while (organisms.length < count) {
-      this.createOrganism();
-      organisms.push({});
-    }
-    
-    // If we need fewer organisms
-    while (organisms.length > count && organisms.length > 0) {
-      const entity = organisms[organisms.length - 1];
-      this.world.removeEntity(entity.id);
-      organisms.pop();
-    }
-  }
-  
-  updateFoodAmount(amount) {
-    const entities = this.world.getEntitiesWithComponent('FoodComponent');
-    
-    // If we need more food
-    while (entities.length < amount) {
-      this.createFood();
-      entities.push({});
-    }
-    
-    // If we need less food
-    while (entities.length > amount && entities.length > 0) {
-      const entity = entities[entities.length - 1];
-      this.world.removeEntity(entity.id);
-      entities.pop();
-    }
-  }
-  
-  updateEntitySize(size) {
-    const entities = this.world.getEntitiesWithComponent('AppearanceComponent');
-    
-    for (const entity of entities) {
-      if (!entity.components.has('FoodComponent')) {
-        const appearance = entity.components.get('AppearanceComponent');
-        appearance.size = size;
+      
+      // Create food
+      for (let i = 0; i < this.parameters.foodAmount; i++) {
+        this.createFood();
       }
+      
+      return true;
+    } catch (error) {
+      console.error('Error resetting simulation:', error);
+      return false;
     }
   }
   
   createOrganism() {
-    const entity = this.world.createEntity();
-    
-    // Random position
-    const x = Math.random() * this.width;
-    const y = Math.random() * this.height;
-    const positionComponent = new PositionComponent(x, y);
-    entity.components.set(positionComponent.constructor.name, positionComponent);
-    positionComponent.entity = entity;
-    
-    // Random velocity
-    const angle = Math.random() * Math.PI * 2;
-    const speed = 20 + Math.random() * 30;
-    const vx = Math.cos(angle) * speed;
-    const vy = Math.sin(angle) * speed;
-    const velocityComponent = new VelocityComponent(vx, vy);
-    entity.components.set(velocityComponent.constructor.name, velocityComponent);
-    velocityComponent.entity = entity;
-    
-    // Appearance
-    const hue = Math.random() * 360;
-    const color = `hsl(${hue}, 80%, 50%)`;
-    const appearanceComponent = new AppearanceComponent(color, this.parameters.entitySize);
-    entity.components.set(appearanceComponent.constructor.name, appearanceComponent);
-    appearanceComponent.entity = entity;
-    
-    // Energy
-    const energyComponent = new EnergyComponent(100, 100);
-    entity.components.set(energyComponent.constructor.name, energyComponent);
-    energyComponent.entity = entity;
-    
-    return entity;
+    try {
+      // Skip if world is not initialized
+      if (!this.world || !this.isInitialized) {
+        return null;
+      }
+      
+      const entity = this.world.createEntity();
+      
+      // Random position
+      const x = Math.random() * this.width;
+      const y = Math.random() * this.height;
+      entity.addComponent(new PositionComponent(x, y));
+      
+      // Random velocity
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 20 + Math.random() * 30;
+      const vx = Math.cos(angle) * speed;
+      const vy = Math.sin(angle) * speed;
+      entity.addComponent(new VelocityComponent(vx, vy));
+      
+      // Appearance
+      const hue = Math.random() * 360;
+      const color = `hsl(${hue}, 80%, 50%)`;
+      entity.addComponent(new AppearanceComponent(color, this.parameters.entitySize));
+      
+      return entity;
+    } catch (error) {
+      console.error('Error creating organism:', error);
+      return null;
+    }
   }
   
   createFood() {
-    const entity = this.world.createEntity();
-    
-    // Random position
-    const x = Math.random() * this.width;
-    const y = Math.random() * this.height;
-    const positionComponent = new PositionComponent(x, y);
-    entity.components.set(positionComponent.constructor.name, positionComponent);
-    positionComponent.entity = entity;
-    
-    // Food component
-    const foodComponent = new FoodComponent();
-    entity.components.set(foodComponent.constructor.name, foodComponent);
-    foodComponent.entity = entity;
-    
-    return entity;
-  }
-  
-  pause() {
-    this.isPaused = true;
-  }
-  
-  resume() {
-    this.isPaused = false;
-  }
-  
-  reset() {
-    // Clear existing entities
-    this.world.clear();
-    this.generation = 0;
-    
-    // Create organisms
-    for (let i = 0; i < this.parameters.organismCount; i++) {
-      this.createOrganism();
-    }
-    
-    // Create food
-    for (let i = 0; i < this.parameters.foodAmount; i++) {
-      this.createFood();
-    }
-  }
-  
-  saveState() {
-    // Return serializable state
-    return {
-      generation: this.generation,
-      parameters: { ...this.parameters }
-    };
-  }
-  
-  loadState(state) {
-    if (!state) return false;
-    
-    // Load saved state
-    if (state.generation !== undefined) {
-      this.generation = state.generation;
-    }
-    
-    if (state.parameters) {
-      this.parameters = { ...this.parameters, ...state.parameters };
-    }
-    
-    // Reset with new parameters
-    this.reset();
-    
-    return true;
-  }
-  
-  saveEntityToLibrary(entity, name, notes) {
-    if (!entity) return null;
-    
-    // Create a copy with additional metadata
-    const savedEntity = {
-      ...entity,
-      name,
-      notes,
-      savedAt: Date.now()
-    };
-    
-    // Get existing saved entities
-    let savedEntities = [];
     try {
-      const saved = localStorage.getItem('saved-organisms');
-      if (saved) {
-        savedEntities = JSON.parse(saved);
+      // Skip if world is not initialized
+      if (!this.world || !this.isInitialized) {
+        return null;
       }
+      
+      const entity = this.world.createEntity();
+      
+      // Random position
+      const x = Math.random() * this.width;
+      const y = Math.random() * this.height;
+      entity.addComponent(new PositionComponent(x, y));
+      
+      // Food component
+      entity.addComponent(new FoodComponent());
+      
+      return entity;
     } catch (error) {
-      console.error('Failed to load saved organisms:', error);
-    }
-    
-    // Add new entity
-    savedEntities.push(savedEntity);
-    
-    // Save to localStorage
-    try {
-      localStorage.setItem('saved-organisms', JSON.stringify(savedEntities));
-    } catch (error) {
-      console.error('Failed to save organism:', error);
+      console.error('Error creating food:', error);
       return null;
     }
-    
-    return savedEntity;
   }
   
-  loadEntitiesFromLibrary() {
-    // Load from localStorage
+  // Implementation of other required methods for SimulationAdapter...
+  
+  getStatistics() {
     try {
-      const saved = localStorage.getItem('saved-organisms');
-      if (saved) {
-        return JSON.parse(saved);
+      if (!this.world || !this.isInitialized) {
+        return { generation: this.generation };
       }
+      
+      const organisms = this.world.getEntitiesWithComponent('PositionComponent')
+        .filter(e => !e.hasComponent('FoodComponent'));
+      
+      const food = this.world.getEntitiesWithComponent('FoodComponent');
+      
+      return {
+        generation: this.generation,
+        organismCount: organisms.length,
+        foodCount: food.length,
+        entityCount: this.world.getEntityCount()
+      };
     } catch (error) {
-      console.error('Failed to load saved organisms:', error);
+      console.error('Error getting statistics:', error);
+      return { generation: this.generation };
     }
-    
-    return [];
   }
 }
 
