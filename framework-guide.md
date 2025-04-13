@@ -17,8 +17,12 @@ The framework has been enhanced with several important features:
 The fastest way to get started is using the `RobustSimulationTemplate`:
 
 ```javascript
-import { RobustSimulationTemplate } from './path/to/RobustSimulationTemplate';
-import { SimulationManager } from 'simulation-frame';
+import React from 'react';
+import { 
+  SimulationManager, 
+  RobustSimulationTemplate 
+} from 'simulation-frame';
+import 'simulation-frame/style.css';
 
 // Create a simulation instance - works out of the box!
 const simulation = new RobustSimulationTemplate();

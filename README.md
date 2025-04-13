@@ -66,7 +66,7 @@ Simulation Frame uses the Entity-Component-System (ECS) architectural pattern wi
 3. **`BaseSystem`**: Logic that processes entities with specific components
 4. **`BaseWorld`**: Central manager for entities and systems
 
-### Enhanced Robust Components (New!)
+### Enhanced Robust Components
 
 1. **`EnhancedBaseWorld`**: Self-checking world with transaction support and circuit breakers
 2. **`ImprovedBaseComponent`**: Self-healing components with automatic initialization
@@ -221,7 +221,7 @@ try {
 }
 ```
 
-For complete details on the robust features, see the [Framework Guide](./framework-guide.md).
+For complete details on the robust features, see the Framework Guide documentation.
 
 ## 🔍 Troubleshooting
 
@@ -249,7 +249,7 @@ For complete details on the robust features, see the [Framework Guide](./framewo
 
 ## 📚 Examples
 
-For complete examples, see the [examples directory](https://github.com/yourusername/simulation-frame/tree/main/examples) in the repository.
+For complete examples, see the examples in the repository.
 
 - `SimpleSimulation`: Basic entity movement with food
 - `PredatorPrey`: Classic predator-prey ecosystem
@@ -258,7 +258,7 @@ For complete examples, see the [examples directory](https://github.com/yourusern
 
 ## 📖 Advanced Documentation
 
-For in-depth documentation on the robust features, error handling, and advanced techniques, see the [Framework Guide](./framework-guide.md).
+For in-depth documentation on the robust features, error handling, and advanced techniques, see the Framework Guide documentation.
 
 ## 📄 License
 
