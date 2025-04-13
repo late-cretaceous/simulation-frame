@@ -17,42 +17,133 @@ import BaseComponent from '../core/BaseComponent';
 import CanvasRenderer from '../utils/CanvasRenderer';
 
 // =========================================
-// COMPONENT CLASSES
+// ENHANCED COMPONENT CLASSES
 // =========================================
 
-// Position component - Stores entity position
+// Position component with property validation
 class PositionComponent extends BaseComponent {
   constructor(x = 0, y = 0) {
     super();
+    this._x = typeof x === 'number' && !isNaN(x) ? x : 0;
+    this._y = typeof y === 'number' && !isNaN(y) ? y : 0;
+  }
+  
+  // Safe getters with validation
+  get x() {
+    return typeof this._x === 'number' ? this._x : 0;
+  }
+  
+  get y() {
+    return typeof this._y === 'number' ? this._y : 0;
+  }
+  
+  // Setters with validation
+  set x(value) {
+    this._x = typeof value === 'number' && !isNaN(value) ? value : this._x;
+  }
+  
+  set y(value) {
+    this._y = typeof value === 'number' && !isNaN(value) ? value : this._y;
+  }
+  
+  // Helper methods
+  getPosition() {
+    return { x: this.x, y: this.y };
+  }
+  
+  setPosition(x, y) {
     this.x = x;
     this.y = y;
+    return this;
   }
 }
 
-// Velocity component - Stores entity movement velocity
+// Velocity component with property validation
 class VelocityComponent extends BaseComponent {
   constructor(vx = 0, vy = 0) {
     super();
+    this._vx = typeof vx === 'number' && !isNaN(vx) ? vx : 0;
+    this._vy = typeof vy === 'number' && !isNaN(vy) ? vy : 0;
+  }
+  
+  // Safe getters with validation
+  get vx() {
+    return typeof this._vx === 'number' ? this._vx : 0;
+  }
+  
+  get vy() {
+    return typeof this._vy === 'number' ? this._vy : 0;
+  }
+  
+  // Setters with validation
+  set vx(value) {
+    this._vx = typeof value === 'number' && !isNaN(value) ? value : this._vx;
+  }
+  
+  set vy(value) {
+    this._vy = typeof value === 'number' && !isNaN(value) ? value : this._vy;
+  }
+  
+  // Helper methods
+  getVelocity() {
+    return { vx: this.vx, vy: this.vy };
+  }
+  
+  setVelocity(vx, vy) {
     this.vx = vx;
     this.vy = vy;
+    return this;
+  }
+  
+  // Get speed (magnitude of velocity)
+  getSpeed() {
+    return Math.sqrt(this.vx * this.vx + this.vy * this.vy);
   }
 }
 
-// Appearance component - Stores entity visual properties
+// Appearance component with property validation
 class AppearanceComponent extends BaseComponent {
   constructor(color = '#00ff00', size = 5) {
     super();
-    this.color = color;
-    this.size = size;
+    this._color = typeof color === 'string' ? color : '#00ff00';
+    this._size = typeof size === 'number' && !isNaN(size) && size > 0 ? size : 5;
+  }
+  
+  // Safe getters with validation
+  get color() {
+    return typeof this._color === 'string' ? this._color : '#00ff00';
+  }
+  
+  get size() {
+    return typeof this._size === 'number' && this._size > 0 ? this._size : 5;
+  }
+  
+  // Setters with validation
+  set color(value) {
+    this._color = typeof value === 'string' ? value : this._color;
+  }
+  
+  set size(value) {
+    this._size = typeof value === 'number' && !isNaN(value) && value > 0 ? value : this._size;
   }
 }
 
-// Food component - Tags entity as food
+// Food component with property validation
 class FoodComponent extends BaseComponent {
   constructor(energy = 50) {
     super();
-    this.energy = energy;
+    this._energy = typeof energy === 'number' && !isNaN(energy) ? energy : 50;
     this.type = 'food';
+  }
+  
+  // Safe getter with validation
+  get energy() {
+    return typeof this._energy === 'number' ? this._energy : 50;
+  }
+  
+  // Setter with validation
+  set energy(value) {
+    this._energy = typeof value === 'number' && !isNaN(value) ? value : this._energy;
   }
 }
 
@@ -207,9 +298,21 @@ export class RobustSimulationTemplate extends SimulationAdapter {
     this._isSimulationInitialized = false;
     this._initializeAttempts = 0;
     this._lastError = null;
+    this._errorCounts = {};
+    this._maxErrorsBeforeBreaker = 5;
     
-    // Create a world instance
-    this.world = new BaseWorld();
+    // Create a world instance with safety options
+    this.world = new BaseWorld({
+      autoInitialize: true,
+      safeMode: true,
+      debugMode: true
+    });
+    
+    // Register component types for auto-creation
+    this.registerComponents();
+    
+    // Register null component implementations for safety
+    this.registerNullComponents();
     
     // Create systems
     this.physicsSystem = new PhysicsSystem(null, 800, 600);
@@ -221,20 +324,7 @@ export class RobustSimulationTemplate extends SimulationAdapter {
     this.isPaused = false;
     
     // Default parameters
-    this.parameters = {
-      // Simulation parameters
-      speed: 1.0,
-      generationTime: 10.0, // Seconds per generation
-      
-      // Entity parameters
-      organismCount: 20,
-      foodAmount: 30,
-      entitySize: 5,
-      foodEnergy: 50,
-      
-      // Display parameters
-      showDebugInfo: false,
-    };
+    this.parameters = this.getDefaultParameters();
     
     // Parameter metadata (for UI controls)
     this.parameterMetadata = {
@@ -287,6 +377,95 @@ export class RobustSimulationTemplate extends SimulationAdapter {
     
     // Saved entities library
     this.entityLibrary = [];
+  }
+  
+  /**
+   * Automatically registers all standard components
+   */
+  registerComponents() {
+    // Register component constructors for auto-creation
+    this.world.registerComponents({
+      PositionComponent: PositionComponent,
+      VelocityComponent: VelocityComponent,
+      AppearanceComponent: AppearanceComponent,
+      FoodComponent: FoodComponent
+    });
+  }
+  
+  /**
+   * Register null component implementations for safety
+   */
+  registerNullComponents() {
+    this.world.registerNullComponents({
+      // Position component null implementation
+      PositionComponent: () => ({
+        type: 'PositionComponent',
+        enabled: false,
+        entity: null,
+        isNull: true,
+        x: 0,
+        y: 0,
+        getPosition: () => ({ x: 0, y: 0 }),
+        setPosition: () => ({ x: 0, y: 0 }),
+        isValid: () => false
+      }),
+      
+      // Velocity component null implementation
+      VelocityComponent: () => ({
+        type: 'VelocityComponent',
+        enabled: false,
+        entity: null,
+        isNull: true,
+        vx: 0,
+        vy: 0,
+        getVelocity: () => ({ vx: 0, vy: 0 }),
+        setVelocity: () => ({ vx: 0, vy: 0 }),
+        getSpeed: () => 0,
+        isValid: () => false
+      }),
+      
+      // Appearance component null implementation
+      AppearanceComponent: () => ({
+        type: 'AppearanceComponent',
+        enabled: false,
+        entity: null,
+        isNull: true,
+        color: '#cccccc',
+        size: 3,
+        isValid: () => false
+      }),
+      
+      // Food component null implementation
+      FoodComponent: () => ({
+        type: 'FoodComponent',
+        enabled: false,
+        entity: null,
+        isNull: true,
+        energy: 0,
+        type: 'food',
+        isValid: () => false
+      })
+    });
+  }
+  
+  /**
+   * Get default parameters
+   */
+  getDefaultParameters() {
+    return {
+      // Simulation parameters
+      speed: 1.0,
+      generationTime: 10.0, // Seconds per generation
+      
+      // Entity parameters
+      organismCount: 20,
+      foodAmount: 30,
+      entitySize: 5,
+      foodEnergy: 50,
+      
+      // Display parameters
+      showDebugInfo: false,
+    };
   }
   
   /**
@@ -485,41 +664,104 @@ export class RobustSimulationTemplate extends SimulationAdapter {
   }
   
   /**
-   * Get statistics about the simulation
+   * Get statistics about the simulation with safe error handling
    */
   getStatistics() {
+    // Check if simulation is initialized
     if (!this._isSimulationInitialized) {
       return { generation: this.generation };
     }
     
-    try {
+    // Use safe execution pattern
+    return this._safeExecute('getStatistics', () => {
       // Get entities
       const allEntities = Array.from(this.world.entities.values());
       const organisms = allEntities.filter(e => !e.hasComponent('FoodComponent'));
       const food = allEntities.filter(e => e.hasComponent('FoodComponent'));
       
-      // Calculate average speed
+      // Calculate average speed safely
       let totalSpeed = 0;
+      let validVelocityCount = 0;
+      
       for (const entity of organisms) {
-        const velocity = entity.getComponent('VelocityComponent');
-        const speed = Math.sqrt(velocity.vx * velocity.vx + velocity.vy * velocity.vy);
-        totalSpeed += speed;
+        // Get velocity component safely
+        const velocity = entity.getComponentSafe ? 
+          entity.getComponentSafe('VelocityComponent') : 
+          entity.getComponent('VelocityComponent');
+        
+        // Check if velocity exists and has valid properties
+        if (velocity && typeof velocity.getSpeed === 'function') {
+          // Use the getSpeed method if available
+          totalSpeed += velocity.getSpeed();
+          validVelocityCount++;
+        } else if (velocity && 
+                 typeof velocity.vx === 'number' && 
+                 typeof velocity.vy === 'number') {
+          // Calculate speed manually if getSpeed isn't available
+          const speed = Math.sqrt(velocity.vx * velocity.vx + velocity.vy * velocity.vy);
+          totalSpeed += speed;
+          validVelocityCount++;
+        }
+        // Skip entities with missing or invalid velocity components
       }
-      const averageSpeed = organisms.length > 0 ? totalSpeed / organisms.length : 0;
+      
+      // Calculate average based on valid velocities
+      const averageSpeed = validVelocityCount > 0 ? totalSpeed / validVelocityCount : 0;
       
       // Return statistics
       return {
-        generation: this.generation,
+        generation: this.generation || 0,
         organismCount: organisms.length,
         foodCount: food.length,
         totalEntities: allEntities.length,
         averageSpeed: averageSpeed,
-        worldWidth: this.width,
-        worldHeight: this.height
+        validVelocityCount: validVelocityCount,
+        worldWidth: this.width || 800,
+        worldHeight: this.height || 600
       };
+    }, 
+    // Fallback if anything fails
+    {
+      generation: this.generation || 0,
+      organismCount: 0,
+      foodCount: 0,
+      totalEntities: 0,
+      averageSpeed: 0,
+      worldWidth: this.width || 800,
+      worldHeight: this.height || 600
+    });
+  }
+  
+  /**
+   * Safe execution wrapper with circuit breaker pattern
+   * @private
+   */
+  _safeExecute(methodName, callback, fallback) {
+    try {
+      return callback();
     } catch (error) {
-      console.error('Error getting statistics:', error);
-      return { generation: this.generation };
+      // Record error for circuit breaker
+      this._errorCounts[methodName] = (this._errorCounts[methodName] || 0) + 1;
+      
+      // Track error
+      this._lastError = {
+        method: methodName,
+        error: error,
+        message: `Error in ${methodName}`,
+        time: new Date()
+      };
+      
+      // Log with context
+      console.error(`Error in ${methodName}:`, error, 
+                   `This is occurrence ${this._errorCounts[methodName]}`);
+      
+      // Check circuit breaker
+      if (this._errorCounts[methodName] > this._maxErrorsBeforeBreaker) {
+        console.warn(`Circuit breaker triggered for ${methodName}`);
+      }
+      
+      // Return fallback
+      return typeof fallback === 'function' ? fallback() : fallback;
     }
   }
   
@@ -617,114 +859,178 @@ export class RobustSimulationTemplate extends SimulationAdapter {
   }
   
   /**
-   * Save the current simulation state
+   * Save the current simulation state with safe error handling
    */
   saveState() {
-    try {
+    return this._safeExecute('saveState', () => {
       // Create entity data
       const entityData = [];
-      const organisms = Array.from(this.world.entities.values())
-        .filter(e => !e.hasComponent('FoodComponent'));
       
-      // Save organism data
+      // Get all entities that are not food
+      const entities = Array.from(this.world.entities.values());
+      const organisms = entities.filter(e => !e.hasComponent('FoodComponent'));
+      
+      // Save organism data with safety checks
       for (const entity of organisms) {
-        const position = entity.getComponent('PositionComponent');
-        const velocity = entity.getComponent('VelocityComponent');
-        const appearance = entity.getComponent('AppearanceComponent');
+        // Get components safely
+        const position = entity.getComponentSafe ? 
+          entity.getComponentSafe('PositionComponent') : 
+          entity.getComponent('PositionComponent');
+          
+        const velocity = entity.getComponentSafe ? 
+          entity.getComponentSafe('VelocityComponent') : 
+          entity.getComponent('VelocityComponent');
+          
+        const appearance = entity.getComponentSafe ? 
+          entity.getComponentSafe('AppearanceComponent') : 
+          entity.getComponent('AppearanceComponent');
         
-        entityData.push({
-          position: { x: position.x, y: position.y },
-          velocity: { vx: velocity.vx, vy: velocity.vy },
-          appearance: { color: appearance.color, size: appearance.size }
-        });
+        // Only include entity if it has all required components with valid properties
+        if (position && velocity && appearance) {
+          // Safely access properties with defaults
+          const posX = typeof position.x === 'number' ? position.x : 0;
+          const posY = typeof position.y === 'number' ? position.y : 0;
+          const velX = typeof velocity.vx === 'number' ? velocity.vx : 0;
+          const velY = typeof velocity.vy === 'number' ? velocity.vy : 0;
+          const color = typeof appearance.color === 'string' ? appearance.color : '#00ff00';
+          const size = typeof appearance.size === 'number' ? appearance.size : 5;
+          
+          entityData.push({
+            position: { x: posX, y: posY },
+            velocity: { vx: velX, vy: velY },
+            appearance: { color: color, size: size }
+          });
+        }
       }
       
-      // Save food positions
+      // Save food positions with safety checks
       const foodData = [];
-      const food = Array.from(this.world.entities.values())
-        .filter(e => e.hasComponent('FoodComponent'));
+      const food = entities.filter(e => e.hasComponent('FoodComponent'));
       
       for (const entity of food) {
-        const position = entity.getComponent('PositionComponent');
-        foodData.push({ x: position.x, y: position.y });
+        // Get position component safely
+        const position = entity.getComponentSafe ? 
+          entity.getComponentSafe('PositionComponent') : 
+          entity.getComponent('PositionComponent');
+        
+        // Only include if position is valid
+        if (position) {
+          const posX = typeof position.x === 'number' ? position.x : 0;
+          const posY = typeof position.y === 'number' ? position.y : 0;
+          
+          foodData.push({ x: posX, y: posY });
+        }
       }
       
       // Return state object
       return {
         timestamp: Date.now(),
-        generation: this.generation,
-        generationTimer: this.generationTimer,
+        generation: this.generation || 0,
+        generationTimer: this.generationTimer || 0,
         parameters: { ...this.parameters },
         entities: entityData,
         food: foodData
       };
-    } catch (error) {
-      console.error('Error saving state:', error);
-      return {
-        timestamp: Date.now(),
-        generation: this.generation,
-        parameters: { ...this.parameters }
-      };
-    }
+    }, 
+    // Fallback state object
+    {
+      timestamp: Date.now(),
+      generation: this.generation || 0,
+      generationTimer: this.generationTimer || 0,
+      parameters: { ...this.parameters },
+      entities: [],
+      food: []
+    });
   }
   
   /**
-   * Load a saved simulation state
+   * Load a saved simulation state with safe error handling
    */
   loadState(state) {
     if (!state) return false;
     
-    try {
+    return this._safeExecute('loadState', () => {
       // Ensure world is initialized
       if (!this._isWorldInitialized) {
         this.world.initialize();
         this._isWorldInitialized = true;
       }
       
-      // Load generation
-      if (state.generation !== undefined) {
+      // Load generation with validation
+      if (state.generation !== undefined && typeof state.generation === 'number') {
         this.generation = state.generation;
       }
       
-      // Load generation timer
-      if (state.generationTimer !== undefined) {
+      // Load generation timer with validation
+      if (state.generationTimer !== undefined && typeof state.generationTimer === 'number') {
         this.generationTimer = state.generationTimer;
       }
       
-      // Load parameters
-      if (state.parameters) {
-        this.parameters = { ...this.parameters, ...state.parameters };
+      // Load parameters with validation
+      if (state.parameters && typeof state.parameters === 'object') {
+        // Safely merge valid parameters
+        const validatedParams = { ...this.parameters };
+        
+        // For each parameter, validate and apply
+        Object.entries(state.parameters).forEach(([key, value]) => {
+          if (key in this.parameters) {
+            // Validate by type
+            const currentValue = this.parameters[key];
+            
+            // Make sure new value matches type of current value
+            if (typeof value === typeof currentValue) {
+              validatedParams[key] = value;
+            }
+          }
+        });
+        
+        this.parameters = validatedParams;
       }
       
       // Clear world
       this.world.clear();
       
-      // Recreate entities
+      // Recreate entities with validation
       if (state.entities && Array.isArray(state.entities)) {
         for (const entityData of state.entities) {
-          this._createOrganism(
-            entityData.position.x,
-            entityData.position.y,
-            entityData.velocity.vx,
-            entityData.velocity.vy,
-            entityData.appearance.color,
-            entityData.appearance.size
-          );
+          // Validate required nested objects and properties
+          if (entityData && 
+              entityData.position && typeof entityData.position === 'object' &&
+              entityData.velocity && typeof entityData.velocity === 'object' &&
+              entityData.appearance && typeof entityData.appearance === 'object') {
+            
+            // Extract with validation
+            const x = typeof entityData.position.x === 'number' ? entityData.position.x : 0;
+            const y = typeof entityData.position.y === 'number' ? entityData.position.y : 0;
+            const vx = typeof entityData.velocity.vx === 'number' ? entityData.velocity.vx : 0;
+            const vy = typeof entityData.velocity.vy === 'number' ? entityData.velocity.vy : 0;
+            const color = typeof entityData.appearance.color === 'string' ? 
+              entityData.appearance.color : '#00ff00';
+            const size = typeof entityData.appearance.size === 'number' ? 
+              entityData.appearance.size : this.parameters.entitySize;
+            
+            // Create organism with validated data
+            this._createOrganism(x, y, vx, vy, color, size);
+          }
         }
       }
       
-      // Recreate food
+      // Recreate food with validation
       if (state.food && Array.isArray(state.food)) {
         for (const foodData of state.food) {
-          this._createFood(foodData.x, foodData.y);
+          if (foodData && typeof foodData === 'object') {
+            // Extract with validation
+            const x = typeof foodData.x === 'number' ? foodData.x : 0;
+            const y = typeof foodData.y === 'number' ? foodData.y : 0;
+            
+            // Create food with validated data
+            this._createFood(x, y);
+          }
         }
       }
       
       return true;
-    } catch (error) {
-      console.error('Error loading state:', error);
-      return false;
-    }
+    }, false); // Fallback to false if loading fails
   }
   
   /**

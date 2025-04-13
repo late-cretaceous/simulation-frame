@@ -8,9 +8,11 @@ The framework has been enhanced with several important features:
 
 1. **Self-checking initialization** - Components initialize automatically when needed
 2. **Error recovery** - Built-in fallbacks and circuit breakers to prevent cascading failures
-3. **Comprehensive drawing capabilities** - Complete set of drawing primitives with safety checks
-4. **Debug tools** - Visual debugging and performance monitoring
-5. **Working examples** - Ready-to-use implementations that require minimal configuration
+3. **Property validation** - Type-safe access to component properties with getters/setters
+4. **Component auto-resolution** - Intelligent component creation and dependency management
+5. **Comprehensive drawing capabilities** - Complete set of drawing primitives with safety checks
+6. **Debug tools** - Visual debugging and performance monitoring
+7. **Working examples** - Ready-to-use implementations that require minimal configuration
 
 ## Quick Start
 
@@ -61,6 +63,23 @@ Key features:
 - Error handling for all operations
 - Pre-implemented systems for physics and rendering
 - Complete implementation of all required methods
+- Component auto-registration
+
+```javascript
+// The template comes with comprehensive error handling
+const simulation = new RobustSimulationTemplate();
+
+// Override only what you need to change
+class MySimulation extends RobustSimulationTemplate {
+  constructor() {
+    super();
+    // Register additional components
+    this.registerComponents({
+      MyCustomComponent: MyCustomComponent
+    });
+  }
+}
+```
 
 ### 2. EnhancedBaseWorld
 
@@ -86,6 +105,21 @@ for (let i = 0; i < 100; i++) {
   world.createEntity();
 }
 world.commitTransaction();
+
+// Register component types for auto-creation
+world.registerComponents({
+  PositionComponent: PositionComponent,
+  VelocityComponent: VelocityComponent
+});
+
+// Get null component implementations for safety
+world.registerNullComponents({
+  PositionComponent: () => ({
+    type: 'PositionComponent',
+    x: 0,
+    y: 0
+  })
+});
 ```
 
 ### 3. ImprovedBaseComponent
@@ -103,14 +137,34 @@ class HealthComponent extends ImprovedBaseComponent {
     });
   }
   
+  // Define getters with validation
+  get health() {
+    return typeof this._health === 'number' ? this._health : 0;
+  }
+  
+  // Define setters with validation
+  set health(value) {
+    this._health = typeof value === 'number' ? value : this._health;
+  }
+  
+  // Use safe execution for error handling
   takeDamage(amount) {
-    this.health = Math.max(0, this.health - amount);
-    return this.health <= 0;
+    return this.safeExecute('takeDamage', () => {
+      this.health = Math.max(0, this.health - amount);
+      return this.health <= 0;
+    }, false);
+  }
+  
+  // Check property validity
+  hasValidHealth() {
+    return this.hasValidProperty('_health', 'number');
+  }
+  
+  // Get property with safety
+  getHealthSafe() {
+    return this.getPropertySafe('_health', 0, 'number');
   }
 }
-
-// Components automatically initialize and track errors
-const health = new HealthComponent(100);
 ```
 
 ### 4. ImprovedCanvasRenderer
@@ -142,7 +196,29 @@ const stats = renderer.getPerformanceStats();
 console.log(`FPS: ${stats.fps.toFixed(1)}`);
 ```
 
-### 5. SimulationDebugger
+### 5. EnhancedBaseEntity
+
+Improved entity with safe component access:
+
+```javascript
+// Create an entity
+const entity = new EnhancedBaseEntity(1);
+
+// Add components
+entity.addComponent(new PositionComponent(10, 20));
+
+// Get components safely (never returns undefined)
+const position = entity.getComponentSafe('PositionComponent');
+// Even if component doesn't exist, this won't crash
+console.log(position.x, position.y);
+
+// Check for errors
+if (entity.getLastError()) {
+  console.warn("Entity had an error:", entity.getLastError());
+}
+```
+
+### 6. SimulationDebugger
 
 Visual debugging tools:
 
@@ -192,6 +268,121 @@ try {
 }
 ```
 
+### Property Validation Pattern
+
+```javascript
+// Instead of direct property access:
+class UnsafeComponent extends BaseComponent {
+  constructor(x = 0, y = 0) {
+    super();
+    this.x = x; // Direct assignment can lead to type issues
+    this.y = y;
+  }
+  
+  // This can fail if x is undefined
+  getDistance() {
+    return Math.sqrt(this.x * this.x + this.y * this.y);
+  }
+}
+
+// Use safer pattern with getters/setters:
+class SafeComponent extends ImprovedBaseComponent {
+  constructor(x = 0, y = 0) {
+    super();
+    this._x = typeof x === 'number' ? x : 0;
+    this._y = typeof y === 'number' ? y : 0;
+  }
+  
+  // Safe getter with validation
+  get x() {
+    return typeof this._x === 'number' ? this._x : 0;
+  }
+  
+  // Safe setter with validation
+  set x(value) {
+    this._x = typeof value === 'number' ? value : this._x;
+  }
+  
+  // Similarly for y
+  get y() {
+    return typeof this._y === 'number' ? this._y : 0;
+  }
+  
+  set y(value) {
+    this._y = typeof value === 'number' ? value : this._y;
+  }
+  
+  // This is now safe - getters ensure valid values
+  getDistance() {
+    return Math.sqrt(this.x * this.x + this.y * this.y);
+  }
+}
+```
+
+### Safe Method Execution
+
+```javascript
+// Instead of direct method execution:
+function unsafeMethod() {
+  try {
+    // This can throw errors
+    const result = someOperation();
+    return result;
+  } catch (error) {
+    console.error("Error:", error);
+    return null;
+  }
+}
+
+// Use the safeExecute pattern:
+class SafeComponent extends ImprovedBaseComponent {
+  doSomething(value) {
+    return this.safeExecute('doSomething', () => {
+      // Your code here
+      return result;
+    }, fallbackValue);
+  }
+}
+
+// Or make your own safe execution wrapper:
+function safeExecute(methodName, callback, fallback) {
+  try {
+    return callback();
+  } catch (error) {
+    console.error(`Error in ${methodName}:`, error);
+    return typeof fallback === 'function' ? fallback() : fallback;
+  }
+}
+```
+
+### Component Auto-Resolution
+
+```javascript
+// Register component types
+world.registerComponents({
+  PositionComponent: PositionComponent,
+  VelocityComponent: VelocityComponent,
+  AppearanceComponent: AppearanceComponent
+});
+
+// Create an entity
+const entity = world.createEntity();
+entity.addComponent(new PositionComponent(10, 20));
+
+// Later, when you need a velocity that might not exist:
+function updateEntity(entity) {
+  const position = entity.getComponent('PositionComponent');
+  
+  // Get velocity safely - if it doesn't exist, it might be created
+  // (if registered) or return a null component (never undefined)
+  const velocity = entity.getComponentSafe('VelocityComponent');
+  
+  // This is safe, even if the component was missing
+  position.x += velocity.vx * deltaTime;
+  position.y += velocity.vy * deltaTime;
+}
+```
+
 ### Robust Rendering
 
 ```javascript
@@ -205,8 +396,8 @@ function render() {
     
     // Draw entities
     for (const entity of entities) {
-      const position = entity.getComponent('PositionComponent');
-      const appearance = entity.getComponent('AppearanceComponent');
+      const position = entity.getComponentSafe('PositionComponent');
+      const appearance = entity.getComponentSafe('AppearanceComponent');
       
       // Will skip if off-screen and handle errors automatically
       renderer.drawCircle(
@@ -234,6 +425,7 @@ The framework provides multiple levels of error handling:
 2. **Circuit breakers** - Prevent cascading failures
 3. **Transaction rollback** - Safe batch operations
 4. **Fallback mechanisms** - Alternative implementations when primary fails
+5. **Property validation** - Type-safe property access
 
 Example:
 
@@ -277,7 +469,60 @@ if (errors.length > 0) {
    renderer.endFrame();
    ```
 
-3. **Check Results** - Methods return success values
+3. **Use Getters/Setters** - For property validation
+
+   ```javascript
+   class MyComponent extends ImprovedBaseComponent {
+     constructor(value = 0) {
+       super();
+       this._value = typeof value === 'number' ? value : 0;
+     }
+     
+     get value() {
+       return typeof this._value === 'number' ? this._value : 0;
+     }
+     
+     set value(newValue) {
+       this._value = typeof newValue === 'number' ? newValue : this._value;
+     }
+   }
+   ```
+
+4. **Component Auto-Registration** - For dependency resolution
+
+   ```javascript
+   // Register components for auto-creation
+   this.world.registerComponents({
+     PositionComponent: PositionComponent,
+     VelocityComponent: VelocityComponent,
+     AppearanceComponent: AppearanceComponent
+   });
+   ```
+
+5. **Use safeExecute** - For method error handling
+
+   ```javascript
+   methodWithErrors() {
+     return this.safeExecute('methodWithErrors', () => {
+       // Code that might throw errors
+       return result;
+     }, fallbackValue);
+   }
+   ```
+
+6. **Use Component Safe Methods** - For safer property access
+
+   ```javascript
+   // Check if property is valid
+   if (component.hasValidProperty('value', 'number')) {
+     // Use property
+   }
+   
+   // Get property with fallback
+   const value = component.getPropertySafe('value', 0, 'number');
+   ```
+
+7. **Check Results** - Methods return success values
 
    ```javascript
    const success = world.update(deltaTime);
@@ -286,14 +531,14 @@ if (errors.length > 0) {
    }
    ```
 
-4. **Visual Debugging** - Enable debug mode during development
+8. **Visual Debugging** - Enable debug mode during development
 
    ```javascript
    renderer.setDebugMode(true);
    world.setDebugMode(true);
    ```
 
-5. **Use Enhanced Base Classes** - Always extend from improved base classes
+9. **Use Enhanced Base Classes** - Always extend from improved base classes
 
    ```javascript
    // Use ImprovedBaseComponent instead of BaseComponent
@@ -344,7 +589,27 @@ console.log(`Skipped: ${stats.skippedDraws}`);
 renderer.drawCircle(x, y, radius, color); // Safe, with fallback
 ```
 
-#### 4. Component issues
+#### 4. Component property access errors
+
+**Solution**: Use getters/setters and validation:
+
+```javascript
+// Instead of:
+const speed = Math.sqrt(velocity.vx * velocity.vx + velocity.vy * velocity.vy);
+
+// Use:
+if (velocity && typeof velocity.getSpeed === 'function') {
+  const speed = velocity.getSpeed();
+} else if (velocity && 
+         typeof velocity.vx === 'number' && 
+         typeof velocity.vy === 'number') {
+  const speed = Math.sqrt(velocity.vx * velocity.vx + velocity.vy * velocity.vy);
+} else {
+  const speed = 0; // Default
+}
+```
+
+#### 5. Component issues
 
 **Solution**: Check component validity and errors:
 
@@ -354,7 +619,7 @@ if (!component.isValid()) {
 }
 ```
 
-#### 5. World corruption
+#### 6. World corruption
 
 **Solution**: Use the circuit breaker and reset mechanism:
 
@@ -466,9 +731,7 @@ class GameRenderer extends ImprovedCanvasRenderer {
   }
   
   drawEntity(entity) {
-    const position = entity.getComponent('PositionComponent');
-    
-    if (!position) return;
+    const position = entity.getComponentSafe('PositionComponent');
     
     // Draw based on entity type
     if (entity.hasComponent('PlayerComponent')) {
@@ -526,29 +789,63 @@ To integrate these improvements with existing simulations:
 1. Replace base classes with improved versions:
    - `BaseWorld` → `EnhancedBaseWorld`
    - `BaseComponent` → `ImprovedBaseComponent`
+   - `BaseEntity` → `EnhancedBaseEntity`
    - `CanvasRenderer` → `ImprovedCanvasRenderer`
 
-2. Add the simulation debugger:
+2. Add property validation with getters/setters:
+   ```javascript
+   // Before:
+   this.x = x;
+   
+   // After:
+   this._x = typeof x === 'number' ? x : 0;
+   
+   get x() {
+     return typeof this._x === 'number' ? this._x : 0;
+   }
+   
+   set x(value) {
+     this._x = typeof value === 'number' ? value : this._x;
+   }
+   ```
+
+3. Use component registry for auto-resolution:
+   ```javascript
+   world.registerComponents({
+     PositionComponent: PositionComponent,
+     VelocityComponent: VelocityComponent
+   });
+   ```
+
+4. Switch to safe component access:
+   ```javascript
+   // Before:
+   const velocity = entity.getComponent('VelocityComponent');
+   
+   // After:
+   const velocity = entity.getComponentSafe('VelocityComponent');
+   ```
+
+5. Add the simulation debugger:
    ```javascript
    const debugger = new SimulationDebugger(yourSimulation);
    ```
 
-3. Use RobustSimulationTemplate as a reference:
+6. Use RobustSimulationTemplate as a reference:
    ```javascript
    // See how methods are implemented in RobustSimulationTemplate
    // and apply similar patterns to your code
    ```
 
-4. Wrap error-prone code in try/catch (if not using improved base classes):
+7. Wrap error-prone code in safeExecute (if not using improved base classes):
    ```javascript
-   try {
+   safeExecute('methodName', () => {
      // Your existing code
-   } catch (error) {
-     console.error("Error:", error);
-     // Provide fallback behavior
-   }
+   }, fallbackValue);
    ```
 
 ## Conclusion
 
 By following these guidelines and using the improved components, your simulations will be more robust, easier to debug, and less prone to crashes. The framework now handles many common issues automatically, allowing you to focus on creating interesting simulations rather than debugging infrastructure problems.
+
+The core upgrades focused on property validation, component resolution, and circuit breakers ensure that even in unexpected scenarios, your simulation will gracefully handle errors rather than crashing.

@@ -6,6 +6,7 @@
  * - Automatic initialization
  * - Self-healing mechanisms
  * - Deep cloning and serialization support
+ * - Property validation and safe access
  */
 
 export class ImprovedBaseComponent {
@@ -53,6 +54,20 @@ export class ImprovedBaseComponent {
      * @readonly
      */
     this.createdAt = Date.now();
+
+    /**
+     * Error counter for circuit breaker functionality
+     * @type {Object}
+     * @private
+     */
+    this._errorCounts = {};
+    
+    /**
+     * Maximum errors before triggering fallback behaviors
+     * @type {number}
+     * @private
+     */
+    this._maxErrorsBeforeBreaker = 5;
     
     // Apply initial data if provided
     if (initialData && typeof initialData === 'object') {
@@ -417,6 +432,83 @@ export class ImprovedBaseComponent {
   clearLastError() {
     this._lastError = null;
     return this;
+  }
+  
+  /**
+   * Safely execute a function with automatic error handling and circuit breaking
+   * @param {string} methodName - Name of the method being executed (for error tracking)
+   * @param {Function} callback - Function to execute
+   * @param {Function|any} fallback - Fallback function or value to return on error
+   * @returns {any} - Result of callback() or fallback value/function if error occurs
+   */
+  safeExecute(methodName, callback, fallback) {
+    try {
+      return callback();
+    } catch (error) {
+      // Record error for this method
+      this._errorCounts[methodName] = (this._errorCounts[methodName] || 0) + 1;
+      
+      // Track the error
+      this._lastError = {
+        method: methodName,
+        error: error,
+        time: new Date()
+      };
+      
+      // Check circuit breaker
+      if (this._errorCounts[methodName] > this._maxErrorsBeforeBreaker) {
+        console.warn(`Circuit breaker triggered for ${this.type}.${methodName}`);
+        return typeof fallback === 'function' ? fallback() : fallback;
+      }
+      
+      // Log error with diagnostic info
+      console.error(`Error in ${this.type}.${methodName}:`, error,
+                   `This is occurrence ${this._errorCounts[methodName]}`);
+      
+      return typeof fallback === 'function' ? fallback() : fallback;
+    }
+  }
+  
+  /**
+   * Check if a property exists and has the expected type
+   * @param {string} propertyName - Name of the property to check
+   * @param {string} expectedType - Expected type of the property
+   * @returns {boolean} - Whether property exists and has expected type
+   */
+  hasValidProperty(propertyName, expectedType) {
+    const value = this[propertyName];
+    if (value === undefined || value === null) return false;
+    
+    switch (expectedType) {
+      case 'number':
+        return typeof value === 'number' && !isNaN(value);
+      case 'string':
+        return typeof value === 'string';
+      case 'boolean':
+        return typeof value === 'boolean';
+      case 'object':
+        return typeof value === 'object' && value !== null;
+      case 'function':
+        return typeof value === 'function';
+      case 'array':
+        return Array.isArray(value);
+      default:
+        return typeof value === expectedType;
+    }
+  }
+  
+  /**
+   * Get a property value with validation and default
+   * @param {string} propertyName - Name of the property to get
+   * @param {any} defaultValue - Default value to return if property is invalid
+   * @param {string} expectedType - Expected type of the property
+   * @returns {any} - Property value or default value
+   */
+  getPropertySafe(propertyName, defaultValue, expectedType) {
+    if (!this.hasValidProperty(propertyName, expectedType)) {
+      return defaultValue;
+    }
+    return this[propertyName];
   }
   
   /**

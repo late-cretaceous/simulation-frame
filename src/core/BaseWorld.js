@@ -926,6 +926,134 @@ export class EnhancedBaseWorld {
   }
   
   /**
+   * Register component constructors for auto-creation
+   * @param {Object} componentRegistry - Object mapping component names to constructor functions
+   * @returns {EnhancedBaseWorld} - This world for chaining
+   */
+  registerComponents(componentRegistry) {
+    if (!componentRegistry || typeof componentRegistry !== 'object') {
+      this._logWarning('Invalid component registry');
+      return this;
+    }
+    
+    try {
+      // Initialize component registry if not exists
+      if (!this._componentRegistry) {
+        this._componentRegistry = new Map();
+      }
+      
+      // Add each component constructor to registry
+      Object.entries(componentRegistry).forEach(([name, constructor]) => {
+        if (typeof constructor === 'function') {
+          this._componentRegistry.set(name, constructor);
+          this.componentTypes.add(name);
+        } else {
+          this._logWarning(`Invalid component constructor for ${name}`);
+        }
+      });
+      
+      return this;
+    } catch (error) {
+      this._trackError('register-components', error);
+      return this;
+    }
+  }
+  
+  /**
+   * Check if a component type can be auto-created
+   * @param {string} componentType - Component type name
+   * @returns {boolean} - True if component can be created
+   */
+  canCreateComponent(componentType) {
+    return this._componentRegistry && this._componentRegistry.has(componentType);
+  }
+  
+  /**
+   * Create a default component instance of the specified type
+   * @param {string} componentType - Component type name
+   * @param {Object} entity - Entity to attach component to
+   * @returns {Object|null} - New component instance or null if cannot create
+   */
+  createDefaultComponent(componentType, entity) {
+    try {
+      if (!this._componentRegistry || !this._componentRegistry.has(componentType)) {
+        return null;
+      }
+      
+      // Get constructor
+      const ComponentConstructor = this._componentRegistry.get(componentType);
+      
+      // Create new instance
+      const component = new ComponentConstructor();
+      
+      // Track component creation
+      this._stats.componentsAdded++;
+      
+      return component;
+    } catch (error) {
+      this._trackError('create-default-component', error, componentType);
+      return null;
+    }
+  }
+  
+  /**
+   * Get a null object implementation for the specified component type
+   * @param {string} componentType - Component type name
+   * @returns {Object} - Null object implementation that won't cause errors
+   */
+  getNullComponent(componentType) {
+    // Check if we have a specific null implementation for this type
+    if (this._nullComponentImplementations && 
+        this._nullComponentImplementations.has(componentType)) {
+      return this._nullComponentImplementations.get(componentType)();
+    }
+    
+    // Return a generic null object that won't cause errors
+    return {
+      type: componentType,
+      enabled: false,
+      entity: null,
+      isNull: true,
+      
+      // Add methods to prevent common errors
+      isValid: () => false,
+      initialize: () => { return this; },
+      cleanup: () => { return this; },
+      getWorld: () => null
+    };
+  }
+  
+  /**
+   * Register null component implementations for specific component types
+   * @param {Object} implementations - Object mapping component names to factory functions
+   * @returns {EnhancedBaseWorld} - This world for chaining
+   */
+  registerNullComponents(implementations) {
+    if (!implementations || typeof implementations !== 'object') {
+      return this;
+    }
+    
+    try {
+      // Initialize null implementation registry if not exists
+      if (!this._nullComponentImplementations) {
+        this._nullComponentImplementations = new Map();
+      }
+      
+      // Add each implementation
+      Object.entries(implementations).forEach(([name, factory]) => {
+        if (typeof factory === 'function') {
+          this._nullComponentImplementations.set(name, factory);
+        }
+      });
+      
+      return this;
+    } catch (error) {
+      this._trackError('register-null-components', error);
+      return this;
+    }
+  }
+  
+  /**
    * Get statistics about the world
    * @returns {Object} - Statistics object
    */

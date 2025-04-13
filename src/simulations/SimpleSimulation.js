@@ -2,38 +2,113 @@ import SimulationAdapter from '../core/SimulationAdapter';
 import BaseWorld from '../core/BaseWorld';
 import BaseComponent from '../core/BaseComponent';
 
-// Position component
+// Enhanced Position component with validation
 class PositionComponent extends BaseComponent {
   constructor(x = 0, y = 0) {
     super();
-    this.x = x;
-    this.y = y;
+    this._x = typeof x === 'number' && !isNaN(x) ? x : 0;
+    this._y = typeof y === 'number' && !isNaN(y) ? y : 0;
+  }
+  
+  // Safe getters with validation
+  get x() {
+    return typeof this._x === 'number' ? this._x : 0;
+  }
+  
+  get y() {
+    return typeof this._y === 'number' ? this._y : 0;
+  }
+  
+  // Setters with validation
+  set x(value) {
+    this._x = typeof value === 'number' && !isNaN(value) ? value : this._x;
+  }
+  
+  set y(value) {
+    this._y = typeof value === 'number' && !isNaN(value) ? value : this._y;
+  }
+  
+  // Helper methods
+  getPosition() {
+    return { x: this.x, y: this.y };
   }
 }
 
-// Velocity component
+// Enhanced Velocity component with validation
 class VelocityComponent extends BaseComponent {
   constructor(vx = 0, vy = 0) {
     super();
-    this.vx = vx;
-    this.vy = vy;
+    this._vx = typeof vx === 'number' && !isNaN(vx) ? vx : 0;
+    this._vy = typeof vy === 'number' && !isNaN(vy) ? vy : 0;
+  }
+  
+  // Safe getters with validation
+  get vx() {
+    return typeof this._vx === 'number' ? this._vx : 0;
+  }
+  
+  get vy() {
+    return typeof this._vy === 'number' ? this._vy : 0;
+  }
+  
+  // Setters with validation
+  set vx(value) {
+    this._vx = typeof value === 'number' && !isNaN(value) ? value : this._vx;
+  }
+  
+  set vy(value) {
+    this._vy = typeof value === 'number' && !isNaN(value) ? value : this._vy;
+  }
+  
+  // Helper method to get speed
+  getSpeed() {
+    return Math.sqrt(this.vx * this.vx + this.vy * this.vy);
   }
 }
 
-// Appearance component
+// Enhanced Appearance component with validation
 class AppearanceComponent extends BaseComponent {
   constructor(color = '#00ff00', size = 5) {
     super();
-    this.color = color;
-    this.size = size;
+    this._color = typeof color === 'string' ? color : '#00ff00';
+    this._size = typeof size === 'number' && !isNaN(size) && size > 0 ? size : 5;
+  }
+  
+  // Safe getters with validation
+  get color() {
+    return typeof this._color === 'string' ? this._color : '#00ff00';
+  }
+  
+  get size() {
+    return typeof this._size === 'number' && this._size > 0 ? this._size : 5;
+  }
+  
+  // Setters with validation
+  set color(value) {
+    this._color = typeof value === 'string' ? value : this._color;
+  }
+  
+  set size(value) {
+    this._size = typeof value === 'number' && !isNaN(value) && value > 0 ? value : this._size;
   }
 }
 
-// Food component
+// Enhanced Food component with validation
 class FoodComponent extends BaseComponent {
   constructor(energy = 50) {
     super();
-    this.energy = energy;
+    this._energy = typeof energy === 'number' && !isNaN(energy) ? energy : 50;
+    this.type = 'food';
+  }
+  
+  // Safe getter with validation
+  get energy() {
+    return typeof this._energy === 'number' ? this._energy : 50;
+  }
+  
+  // Setter with validation
+  set energy(value) {
+    this._energy = typeof value === 'number' && !isNaN(value) ? value : this._energy;
   }
 }
 
@@ -347,23 +422,59 @@ export class SimpleSimulation extends SimulationAdapter {
   getStatistics() {
     try {
       if (!this.world || !this.isInitialized) {
-        return { generation: this.generation };
+        return { generation: this.generation || 0 };
       }
       
-      const organisms = this.world.getEntitiesWithComponent('PositionComponent')
-        .filter(e => !e.hasComponent('FoodComponent'));
+      // Get entities with safe filtering
+      const allEntities = Array.from(this.world.entities.values());
+      const organisms = allEntities.filter(e => e && !e.hasComponent('FoodComponent'));
+      const food = allEntities.filter(e => e && e.hasComponent('FoodComponent'));
       
-      const food = this.world.getEntitiesWithComponent('FoodComponent');
+      // Calculate average speed safely
+      let totalSpeed = 0;
+      let validVelocityCount = 0;
+      
+      for (const entity of organisms) {
+        // Get velocity component safely
+        const velocity = entity.getComponentSafe ? 
+          entity.getComponentSafe('VelocityComponent') : 
+          entity.getComponent('VelocityComponent');
+        
+        // Check if velocity exists and has valid properties or methods
+        if (velocity && typeof velocity.getSpeed === 'function') {
+          // Use the getSpeed method if available
+          totalSpeed += velocity.getSpeed();
+          validVelocityCount++;
+        } else if (velocity && 
+                 typeof velocity.vx === 'number' && 
+                 typeof velocity.vy === 'number') {
+          // Calculate speed manually if getSpeed isn't available
+          const speed = Math.sqrt(velocity.vx * velocity.vx + velocity.vy * velocity.vy);
+          totalSpeed += speed;
+          validVelocityCount++;
+        }
+        // Skip entities with missing or invalid velocity components
+      }
+      
+      // Calculate average based on valid velocities
+      const averageSpeed = validVelocityCount > 0 ? totalSpeed / validVelocityCount : 0;
       
       return {
-        generation: this.generation,
+        generation: this.generation || 0,
         organismCount: organisms.length,
         foodCount: food.length,
-        entityCount: this.world.getEntityCount()
+        entityCount: this.world.getEntityCount(),
+        averageSpeed: averageSpeed
       };
     } catch (error) {
       console.error('Error getting statistics:', error);
-      return { generation: this.generation };
+      return { 
+        generation: this.generation || 0,
+        organismCount: 0,
+        foodCount: 0,
+        entityCount: 0,
+        averageSpeed: 0
+      };
     }
   }
 }

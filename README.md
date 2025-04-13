@@ -7,8 +7,9 @@ A React-based framework for building interactive entity-component-system simulat
 - **Complete ECS Architecture**: Build complex simulations using the Entity-Component-System pattern
 - **React Integration**: Seamlessly works with React for UI components
 - **Built-in Canvas Management**: Handle viewport, zooming, and interactions
-- **Enhanced Robustness**: Self-healing components and automatic error recovery
+- **Enhanced Robustness**: Self-healing components and automatic error recovery with circuit breakers
 - **Visual Debugging**: Built-in performance monitoring and debug visualization
+- **Guaranteed Type Safety**: Safe property access with validation and fallbacks
 
 ## 📦 Installation
 
@@ -201,6 +202,8 @@ The enhanced components provide multiple layers of protection:
 3. **Circuit breakers**: Prevent cascading failures from repeated errors
 4. **Transaction support**: All-or-nothing batch operations for entity management
 5. **Fallback mechanisms**: Alternative implementations when primary methods fail
+6. **Property validation**: Type-safe property access with getters and setters 
+7. **Component resolution**: Intelligent component dependency resolution and creation
 
 Example of robust error handling:
 
@@ -241,6 +244,7 @@ For complete details on the robust features, see the Framework Guide documentati
    - Switch to `ImprovedBaseComponent` for automatic error recovery
    - Check component validity with `component.isValid()`
    - Review error logs with `component.getLastError()`
+   - Use component safe methods like `getPropertySafe` and `safeExecute`
 
 4. **Canvas rendering problems**
    - Use `ImprovedCanvasRenderer` instead of direct canvas operations
