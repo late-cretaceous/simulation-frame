@@ -1,6 +1,6 @@
 {
   "name": "simulation-frame",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "A React-based simulation framework for building interactive entity-component-system simulations",
   "type": "module",
   "main": "./dist/simulation-frame.umd.js",
